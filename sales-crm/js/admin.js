@@ -29,7 +29,8 @@ export function AdminApp({ user, route, onLogout }) {
   const mobile = useIsMobile();
   const refreshCounts = async () => {
     try { const d = await api('/admin/dashboard'); setCounts((c) => ({ ...c, ...d.kpis })); } catch { /* ignore */ }
-    try { const h = await api('/admin/health/overview'); setCounts((c) => ({ ...c, labAttention: h.kpis.needsAttention })); } catch { /* module not installed */ }
+    try { const h = await api('/admin/health/overview'); setCounts((c) => ({ ...c, labsInstalled: true, labAttention: h.kpis.needsAttention })); }
+    catch (e) { if (e.status === 404) setCounts((c) => ({ ...c, labsInstalled: false })); /* module not installed: hide the tab */ }
   };
   useEffect(() => { refreshCounts(); }, [p]);
   useEffect(() => { setDrawer(false); }, [p]);
@@ -50,7 +51,7 @@ export function AdminApp({ user, route, onLogout }) {
   return html`<div class=${'adm-shell' + (drawer ? ' drawer-open' : '')}>
     <aside class="adm-side">
       <a class="brand" href="#/admin"><span class="brand-mark">24</span><span class="brand-name">Queue24 <small>Admin</small></span></a>
-      <nav>${NAV.map((n) => html`<a href=${'#' + n.to} class=${active === n ? 'active' : ''}>
+      <nav>${NAV.filter((n) => n.to !== '/admin/labs' || counts.labsInstalled !== false).map((n) => html`<a href=${'#' + n.to} class=${active === n ? 'active' : ''}>
         <${Icon} name=${n.icon} size=${18} /><span>${n.label}</span>${n.badge && counts[n.badge] > 0 && html`<em class=${n.badge === 'openAlerts' ? 'hot' : ''}>${counts[n.badge]}</em>`}</a>`)}</nav>
       <div class="adm-side-foot"><span class="muted">Signed in as</span><b>${user.name}</b></div>
     </aside>
@@ -258,7 +259,7 @@ function AccountModal({ open, role, onClose, onCreated }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   useEffect(() => { if (open) { setF(blank); setError(''); } }, [open]);
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); };
   async function submit(e) {
     e && e.preventDefault();
     setError(''); setSaving(true);
@@ -282,7 +283,7 @@ function AccountModal({ open, role, onClose, onCreated }) {
         <${Field} label="Designation"><input value=${f.designation} onInput=${set('designation')} /></${Field}>
         <${Field} label="Territory / area"><input value=${f.territory} onInput=${set('territory')} placeholder="e.g. Civil Lines, Bareilly" /></${Field}>
       </div>`}
-      <label class="check"><input type="checkbox" checked=${f.custom} onChange=${(e) => setF({ ...f, custom: e.target.checked })} /><span>Set the password myself instead of generating one</span></label>
+      <label class="check"><input type="checkbox" checked=${f.custom} onChange=${(e) => { const v = e.target.checked; setF((p) => ({ ...p, custom: v })); }} /><span>Set the password myself instead of generating one</span></label>
       ${f.custom && html`<${Field} label="Password" hint="At least 8 characters"><input value=${f.password} onInput=${set('password')} autocomplete="new-password" /></${Field}>`}
       ${error && html`<div class="form-error"><${Icon} name="alert" size=${16} />${error}</div>`}
     </form>
@@ -418,7 +419,7 @@ function AccountPanel({ employee: e, me, onChange }) {
   const [saving, setSaving] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [pausing, setPausing] = useState(false);
-  const set = (k) => (ev) => setF({ ...f, [k]: ev.target.value });
+  const set = (k) => (ev) => { const v = ev.target.value; setF((p) => ({ ...p, [k]: v })); };
   const isMe = e.id === me.id;
   async function save() {
     setSaving(true);
@@ -833,7 +834,7 @@ function LabOrders({ onOpen }) {
   const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
   const { data, error, loading, reload } = useLive(`${H}/orders?${qs}`, 15000);
   const partners = useApi(`${H}/partners`);
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); };
   return html`<div class="stack">
     <div class="filters">
       <div class="search"><${Icon} name="search" size=${17} /><input placeholder="Order no., patient, city, phone…" value=${f.q} onInput=${set('q')} /></div>
@@ -931,7 +932,7 @@ function PartnerEditModal({ p, onClose, onSaved }) {
   const isNew = !p.id;
   const [f, setF] = useState({ name: p.name || '', email: p.email || '', phone: p.phone || '', contactPerson: p.contactPerson || '', city: p.city || '', state: p.state || '', address: p.address || '' });
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); };
   async function save() {
     setBusy(true);
     try { const r = await api(isNew ? `${H}/partners` : `${H}/partners/${p.id}`, { method: isNew ? 'POST' : 'PATCH', body: f }); toast(isNew ? 'Lab added.' : 'Saved.'); onSaved(r); }

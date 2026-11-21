@@ -35,9 +35,11 @@
       color: #178a5c !important; background: #fff; border: 1.5px solid #1FA36E; border-radius: 999px; transition: background .15s, transform .15s; }
     .nav-bt-btn:hover { background: #E8F6EF; transform: translateY(-1px); }
     .nav-bt-btn::after { display: none !important; }
-    @media (max-width: 1280px) { .site-header .navbar { gap: 28px; } .nav-menu { gap: 22px; } }
+    .nav-lab-btn { color: #2a5bb8 !important; border-color: #4f7fd6; }
+    .nav-lab-btn:hover { background: #ecf2fd; }
+    @media (max-width: 1500px) { .site-header .navbar { gap: 24px; } .nav-menu { gap: 22px; } .nav-actions { gap: 8px; } .nav-bt-btn { padding: 7px 12px; } }
     /* links + buttons no longer fit side by side: use the phone menu */
-    @media (max-width: 1120px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
+    @media (max-width: 1240px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
     .mobile-drawer .nav-bt-mobile { display: flex; margin: 8px 0; padding: 11px 16px; font-size: 1rem; border-bottom: 1.5px solid #1FA36E; }
   </style>
 </head>
@@ -75,6 +77,7 @@
       <!-- Nav Actions -->
       <div class="nav-actions">
         <a href="/blood-test/" class="nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a>
+        <a href="/lab-partners/" class="nav-bt-btn nav-lab-btn" id="nav-lab-partners-btn"><span aria-hidden="true">🧪</span> Lab partners</a>
         <button class="btn btn-primary nav-get-started trigger-get-started" id="nav-cta-btn">
           Get started free <span class="btn-arrow">→</span>
         </button>
@@ -98,6 +101,7 @@
     <a href="#customers" class="nav-link">Our customers</a>
     <a href="#resources" class="nav-link trigger-resources">Resources</a>
     <a href="/blood-test/" class="nav-link nav-bt-btn nav-bt-mobile"><span aria-hidden="true">🩸</span> Blood test</a>
+    <a href="/lab-partners/" class="nav-link nav-bt-btn nav-bt-mobile nav-lab-btn"><span aria-hidden="true">🧪</span> Lab partners</a>
     <div class="mobile-drawer-actions">
       <button class="btn btn-outline smart-download-btn" style="width: 100%; border-color: var(--primary); color: var(--primary-dark); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg> Download App (iOS &amp; Android)</button>
       <button class="btn btn-primary trigger-get-started" style="width: 100%;">Get started free →</button>

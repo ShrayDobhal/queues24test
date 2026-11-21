@@ -53,7 +53,7 @@ export function ChatThread({ path, me, canSend = true, lockedText, onQuote, quot
 
   async function pick(list) {
     const arr = [];
-    for (const f of [...list].slice(0, 5 - files.length)) arr.push(/^image\/(jpeg|png|webp)$/.test(f.type) ? await compressImage(f, 2000, 0.85) : f);
+    for (const f of [...list].slice(0, 5 - files.length)) arr.push(f.type === 'application/pdf' ? f : await compressImage(f, 2000, 0.85)); // also shrinks HEIC / untyped phone photos
     setFiles((x) => [...x, ...arr]);
   }
   async function send() {

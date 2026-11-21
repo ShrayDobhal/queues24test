@@ -92,7 +92,7 @@ function LocationModal({ areas, value, onSave, onClose }) {
 }
 
 // ------------------------------------------------------------------ test card + detail
-function TestCard({ t, inCart, onToggle, onOpen }) {
+function TestCard({ t, inCart, onToggle, onOpen, onBook }) {
   return html`<article class=${'tcard' + (t.kind === 'package' ? ' pkg' : '')}>
     <button class="tcard-main" onClick=${onOpen}>
       ${t.kind === 'package' && html`<span class="tcard-tag">Package · ${t.includes.length} tests · ${t.parameters} parameters</span>`}
@@ -105,14 +105,18 @@ function TestCard({ t, inCart, onToggle, onOpen }) {
     </button>
     <div class="tcard-foot">
       <div class="price"><b>₹${t.price}</b>${t.mrp > t.price && html`<s>₹${t.mrp}</s><em>${off(t)}% off</em>`}</div>
-      <button class=${'btn btn-sm ' + (inCart ? 'btn-secondary' : 'btn-primary')} onClick=${onToggle}>${inCart ? html`<${Icon} name="check" size=${15} />Added` : 'Add'}</button>
+      ${inCart
+        ? html`<div class="tcard-actions"><button class="icon-btn sm" onClick=${onToggle} aria-label="Remove from cart" title="Remove from cart"><${Icon} name="x" size=${15} stroke=${2.4} /></button>
+            <button class="btn btn-sm btn-primary" onClick=${onBook}>Book now</button></div>`
+        : html`<button class="btn btn-sm btn-secondary add-btn" onClick=${onToggle}><${Icon} name="plus" size=${15} />Add</button>`}
     </div>
   </article>`;
 }
-function TestDetail({ t, inCart, onToggle, onClose }) {
+function TestDetail({ t, inCart, onToggle, onClose, onBook }) {
   return html`<${Modal} open title=${t.name} subtitle=${t.kind === 'package' ? `Package · ${t.parameters} parameters` : `${t.sample} test`} onClose=${onClose}
     footer=${html`<div class="price big"><b>₹${t.price}</b>${t.mrp > t.price && html`<s>₹${t.mrp}</s><em>${off(t)}% off</em>`}</div>
-      <${Button} variant=${inCart ? 'secondary' : 'primary'} icon=${inCart ? 'check' : 'cart'} onClick=${onToggle}>${inCart ? 'In cart' : 'Add to cart'}</${Button}>`}>
+      ${inCart ? html`<div class="row-gap"><${Button} variant="secondary" onClick=${onToggle}>Remove</${Button}><${Button} icon="arrowRight" onClick=${onBook}>Book now</${Button}></div>`
+        : html`<${Button} icon="cart" onClick=${onToggle}>Add to cart</${Button}>`}`}>
     <p class="detail-desc">${t.description}</p>
     <div class="facts">
       <div><${Icon} name="droplet" size=${18} /><span>Sample</span><b>${t.sample}</b></div>
@@ -157,14 +161,14 @@ function Home({ cat, tests, cart, toggle, loc, onLoc }) {
 
     ${packages.length > 0 && html`<section>
       <div class="section-head"><h2>${filtering ? 'Packages' : 'Popular health packages'}</h2></div>
-      <div class=${filtering ? 'tgrid' : 'hscroll'}>${packages.map((t) => html`<${TestCard} key=${t.id} t=${t} inCart=${cart.includes(t.id)} onToggle=${() => toggle(t.id)} onOpen=${() => setOpen(t)} />`)}</div>
+      <div class=${filtering ? 'tgrid' : 'hscroll'}>${packages.map((t) => html`<${TestCard} key=${t.id} t=${t} inCart=${cart.includes(t.id)} onToggle=${() => toggle(t.id)} onOpen=${() => setOpen(t)} onBook=${() => navigate('/cart')} />`)}</div>
     </section>`}
     <section>
       <div class="section-head"><h2>${filtering ? `${plural(singles.length, 'test')}` : 'Book individual tests'}</h2></div>
-      ${singles.length ? html`<div class="tgrid">${singles.map((t) => html`<${TestCard} key=${t.id} t=${t} inCart=${cart.includes(t.id)} onToggle=${() => toggle(t.id)} onOpen=${() => setOpen(t)} />`)}</div>`
+      ${singles.length ? html`<div class="tgrid">${singles.map((t) => html`<${TestCard} key=${t.id} t=${t} inCart=${cart.includes(t.id)} onToggle=${() => toggle(t.id)} onOpen=${() => setOpen(t)} onBook=${() => navigate('/cart')} />`)}</div>`
         : !packages.length && html`<${Empty} icon="search" title="No tests found" action=${html`<${Button} variant="secondary" icon="upload" onClick=${() => navigate('/rx')}>Upload prescription instead</${Button}>`}>Try another name, or upload your prescription and the lab will tell you what to book.</${Empty}>`}
     </section>
-    ${open && html`<${TestDetail} t=${open} inCart=${cart.includes(open.id)} onToggle=${() => toggle(open.id)} onClose=${() => setOpen(null)} />`}
+    ${open && html`<${TestDetail} t=${open} inCart=${cart.includes(open.id)} onToggle=${() => toggle(open.id)} onClose=${() => setOpen(null)} onBook=${() => { setOpen(null); navigate('/cart'); }} />`}
   </div>`;
 }
 
@@ -177,8 +181,9 @@ function nextDays(n) {
 function BookingFields({ cat, f, setF, user }) {
   const days = nextDays(7);
   const hourNow = new Date().getHours();
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const setM = (k) => (e) => setF({ ...f, member: { ...f.member, [k]: e.target.value } });
+  // functional updates: phone autofill fills several fields at once
+  const set = (k) => (e) => { const v = e.target.value; setF((x) => ({ ...x, [k]: v })); };
+  const setM = (k) => (e) => { const v = e.target.value; setF((x) => ({ ...x, member: { ...x.member, [k]: v } })); };
   return html`<div class="form-grid">
     <div class="form-row">
       <${Field} label="Patient name"><input value=${f.member.name} onInput=${setM('name')} placeholder="Full name" /></${Field}>
@@ -189,7 +194,7 @@ function BookingFields({ cat, f, setF, user }) {
     </div>
     <${Field} label="Collection address"><textarea rows="2" value=${f.address} onInput=${set('address')} placeholder="House / flat no., building, street, area"></textarea></${Field}>
     <div class="form-row">
-      <${Field} label="Pincode"><input inputmode="numeric" maxlength="6" value=${f.pincode} onInput=${(e) => setF({ ...f, pincode: e.target.value.replace(/\D/g, '') })} placeholder="6 digits" /></${Field}>
+      <${Field} label="Pincode"><input inputmode="numeric" maxlength="6" value=${f.pincode} onInput=${(e) => { const v = e.target.value.replace(/\D/g, ''); setF((x) => ({ ...x, pincode: v })); }} placeholder="6 digits" /></${Field}>
       <${Field} label="Phone for the collection team" optional><input type="tel" value=${f.contactPhone} onInput=${set('contactPhone')} placeholder=${user ? user.phone : 'Your mobile'} /></${Field}>
     </div>
     <${Field} label="Collection date"><div class="day-chips">${days.map((d, i) => html`<button type="button" class=${'day-chip' + (f.slotDate === d ? ' active' : '')} onClick=${() => setF({ ...f, slotDate: d, slotWindow: '' })}>
@@ -237,7 +242,7 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
   if (!items.length) return html`<${Empty} icon="cart" title="Your cart is empty" action=${html`<${Button} onClick=${() => navigate('/')}>Browse tests</${Button}>`}>Add tests or a health package, or upload a prescription.</${Empty}>`;
   return html`<div class="checkout">
     <div class="stack">
-      <div class="page-head"><button class="icon-btn" onClick=${() => navigate('/')} aria-label="Back"><${Icon} name="left" /></button><div><h1>Book home collection</h1><p>${plural(items.length, 'test')} · pay at collection</p></div></div>
+      <div class="page-head"><button class="icon-btn" onClick=${() => navigate('/')} aria-label="Back"><${Icon} name="left" /></button><div><h1>Book home collection</h1><p>${plural(items.length, 'test')} · free home sample collection</p></div></div>
       <section class="card"><div class="card-body">
         ${items.map((t) => html`<div class="cart-row" key=${t.id}><div><b>${t.name}</b><small>${t.kind === 'package' ? `${t.includes.length} tests, ${t.parameters} parameters` : t.sample} · report in ${t.reportHours} hrs</small></div>
           <div class="price"><b>₹${t.price}</b>${t.mrp > t.price && html`<s>₹${t.mrp}</s>`}</div><button class="icon-btn" onClick=${() => toggle(t.id)} aria-label="Remove"><${Icon} name="trash" size=${16} /></button></div>`)}
@@ -249,13 +254,14 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
       <section class="card"><div class="card-head"><div><h3>Patient, address & slot</h3></div></div><div class="card-body"><${BookingFields} cat=${cat} f=${f} setF=${setF} user=${user} /></div></section>
     </div>
     <aside class="summary card"><div class="card-body">
-      <h3>Bill summary</h3>
-      <div class="sum-row"><span>Tests total (MRP)</span><span>₹${mrp}</span></div>
+      <h3>Booking summary</h3>
+      <div class="sum-row"><span>${plural(items.length, 'test')} (MRP)</span><span>₹${mrp}</span></div>
       ${mrp > total && html`<div class="sum-row save"><span>Discount</span><span>−₹${mrp - total}</span></div>`}
-      <div class="sum-row"><span>Home collection</span><span class="muted">Included</span></div>
-      <div class="sum-row total"><span>To pay</span><b>₹${total}</b></div>
-      <div class="pay-note"><${Icon} name="shield" size=${15} />Pay by cash or UPI to the collection team.</div>
-      <${Button} size="lg" class="btn-block" loading=${busy} onClick=${place}>${user ? 'Confirm booking' : 'Verify number & book'}</${Button}>
+      <div class="sum-row"><span>Home sample collection</span><span class="save-text">Free</span></div>
+      <div class="sum-row total"><span>Total</span><b>₹${total}</b></div>
+      <div class="pay-note"><${Icon} name="shield" size=${15} />A certified partner lab collects the sample at your address.</div>
+      <${Button} size="lg" class="btn-block" icon="arrowRight" loading=${busy} onClick=${place}>Book now</${Button}>
+      ${!user && html`<p class="book-hint">We'll verify your mobile number in the next step.</p>`}
     </div></aside>
   </div>`;
 }
@@ -269,7 +275,7 @@ function RxStart({ user, loc, onLoc, ensureUser }) {
   const ref = useRef(rid());
   async function add(list) {
     const arr = [];
-    for (const f of [...list].slice(0, 5 - files.length)) arr.push(/^image\/(jpeg|png|webp)$/.test(f.type) ? await compressImage(f, 2200, 0.88) : f);
+    for (const f of [...list].slice(0, 5 - files.length)) arr.push(f.type === 'application/pdf' ? f : await compressImage(f, 2200, 0.88)); // also shrinks HEIC / untyped phone photos
     setFiles((x) => [...x, ...arr.map((f) => ({ f, url: /^image\//.test(f.type) ? URL.createObjectURL(f) : null }))]);
   }
   async function send() {
@@ -362,7 +368,7 @@ function OrderDetail({ id, cat, user }) {
         ${o.address && html`<div class="kv-inline"><span>Address</span><b>${o.address}, ${o.city} ${o.pincode || ''}</b></div>`}
         ${o.patientName && o.age && html`<div class="kv-inline"><span>Patient</span><b>${o.patientName}, ${o.age} ${o.gender ? '· ' + o.gender : ''}</b></div>`}
         ${o.lines.length > 0 && html`<div class="lines">${o.lines.map((l) => html`<div class="sum-row"><span>${l.name}</span><span>₹${l.price}</span></div>`)}
-          <div class="sum-row total"><span>Total (pay at collection)</span><b>₹${o.total}</b></div></div>`}
+          <div class="sum-row total"><span>Total</span><b>₹${o.total}</b></div></div>`}
         ${o.prescriptions.length > 0 && html`<div><h4 class="detail-h">Prescription</h4><div class="msg-files">${o.prescriptions.map((f) => html`<${FileChip} file=${f} key=${f.id} />`)}</div></div>`}
         ${o.actions.includes('cancel') && html`<div><${Button} variant="danger-ghost" size="sm" icon="x" onClick=${cancel}>Cancel order</${Button}></div>`}
       </div></div>
@@ -384,8 +390,8 @@ function ConfirmQuote({ o, cat, user, onClose, onDone }) {
     catch (e) { toast(e.message, 'error'); }
     setBusy(false);
   }
-  return html`<${Modal} open size="lg" title="Book sample collection" subtitle=${`${plural(o.lines.length, 'test')} · ₹${o.total} · pay at collection`} onClose=${onClose}
-    footer=${html`<${Button} variant="ghost" onClick=${onClose}>Not now</${Button}><${Button} loading=${busy} onClick=${submit}>Confirm booking · ₹${o.total}</${Button}>`}>
+  return html`<${Modal} open size="lg" title="Book sample collection" subtitle=${`${plural(o.lines.length, 'test')} · ₹${o.total} · free home collection`} onClose=${onClose}
+    footer=${html`<${Button} variant="ghost" onClick=${onClose}>Not now</${Button}><${Button} loading=${busy} onClick=${submit}>Book now · ₹${o.total}</${Button}>`}>
     <div class="lines" style="margin-bottom:16px">${o.lines.map((l) => html`<div class="sum-row"><span>${l.name}</span><span>₹${l.price}</span></div>`)}</div>
     <${BookingFields} cat=${cat} f=${f} setF=${setF} user=${user} />
   </${Modal}>`;

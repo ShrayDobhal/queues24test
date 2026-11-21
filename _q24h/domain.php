@@ -316,7 +316,7 @@ function patient_confirm(array $pt, int $id, array $b): void
         if (affected("UPDATE orders SET pincode = ?, address = ?, member_name = ?, member_age = ?, member_gender = ?, contact_phone = ?, slot_date = ?, slot_window = ?, status = 'scheduled', updated_at = ? WHERE id = ? AND status = 'quoted'",
             [$bk['pincode'], $bk['address'], $bk['member_name'], $bk['member_age'], $bk['member_gender'], $bk['contact_phone'], $bk['slot_date'], $bk['slot_window'], now_iso(), $id]) !== 1) throw bad('Please refresh and try again.');
         add_event($id, 'patient', (int) $pt['id'], 'confirmed', 'quoted', 'scheduled', '₹' . $o['total']);
-        system_msg($id, 'Booking confirmed. Sample collection on ' . date('D, j M', strtotime($bk['slot_date'])) . ', ' . SLOT_WINDOWS[$bk['slot_window']] . '. Pay ₹' . $o['total'] . ' at collection.');
+        system_msg($id, 'Booking confirmed. Sample collection on ' . date('D, j M', strtotime($bk['slot_date'])) . ', ' . SLOT_WINDOWS[$bk['slot_window']] . '.');
     });
 }
 const PARTNER_STEPS = ['collected' => 'scheduled', 'processing' => 'collected', 'completed' => 'report_ready'];

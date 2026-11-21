@@ -1,7 +1,7 @@
 // Employee (field sales) workspace.
 import {
   html, useState, useEffect, useRef, useMemo, api, apiUpload, useApi, navigate, match, toast, fmtDay, fmtDate, fmtTime12,
-  greeting, plural, OUTCOMES, LEAVE_TYPES, compressImage, getLocation, addMonths, timeAgo,
+  greeting, plural, OUTCOMES, LEAVE_TYPES, compressImage, looksLikeImage, drafts, getLocation, addMonths, timeAgo,
 } from './lib.js';
 import {
   Icon, Button, Loading, ErrorBox, Badge, Empty, Stat, Card, Calendar, CalendarLegend, MonthNav, VisitCard, Field, Avatar,
@@ -145,39 +145,73 @@ function EmpHome({ user }) {
 }
 
 // ------------------------------------------------------------------ New clinic update
+const DRAFT_KEY = 'new-update';
 function NewUpdate() {
+  const EMPTY = { clinicName: '', address: '', contactPerson: '', contactPhone: '', outcome: '', notes: '' };
   const [photos, setPhotos] = useState([]); // {file, url}
-  const [f, setF] = useState({ clinicName: '', address: '', contactPerson: '', contactPhone: '', outcome: '', notes: '' });
+  const [f, setF] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [loc, setLoc] = useState({ state: 'idle' });
   const [progress, setProgress] = useState(null);
+  const [processing, setProcessing] = useState(0); // photos still being prepared
+  const [restored, setRestored] = useState(false);
+  const ready = useRef(false); // don't overwrite a saved draft before it has been restored
+  const sent = useRef(false);
   const camRef = useRef(null);
   const galRef = useRef(null);
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
 
   const fetchLoc = async () => {
     setLoc({ state: 'loading' });
     try { setLoc({ state: 'ok', ...(await getLocation()) }); } catch (e) { setLoc({ state: 'error', message: e.message }); }
   };
-  useEffect(() => { fetchLoc(); return () => photos.forEach((p) => URL.revokeObjectURL(p.url)); }, []);
+  useEffect(() => {
+    fetchLoc();
+    // restore an unsent update (page reloaded by the camera app, upload failed, app closed…)
+    drafts.load(DRAFT_KEY).then((d) => {
+      if (d && (d.photos?.length || Object.values(d.fields || {}).some((v) => v))) {
+        setF({ ...EMPTY, ...d.fields });
+        setPhotos((d.photos || []).map((file) => ({ file, url: URL.createObjectURL(file) })));
+        setRestored(true);
+      }
+      ready.current = true;
+    });
+    return () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
+  }, []);
+  // keep the draft up to date (photos are already compressed, so this is small)
+  useEffect(() => {
+    if (!ready.current || sent.current) return;
+    const empty = !photos.length && !Object.values(f).some((v) => v);
+    const t = setTimeout(() => (empty ? drafts.clear(DRAFT_KEY) : drafts.save(DRAFT_KEY, { fields: f, photos: photos.map((p) => p.file), at: Date.now() })), 300);
+    return () => clearTimeout(t);
+  }, [f, photos]);
 
-  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); if (errors[k]) setErrors({ ...errors, [k]: null }); };
+  // functional updates: phone autofill changes several fields at once
+  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); setErrors((x) => (x[k] ? { ...x, [k]: null } : x)); };
 
   async function addFiles(list) {
-    const files = [...list].filter((x) => x.type.startsWith('image/') || /\.(heic|heif)$/i.test(x.name));
-    const room = 4 - photos.length;
-    if (files.length > room) toast(`You can attach up to 4 photos.`, 'error');
-    const next = [];
-    for (const file of files.slice(0, room)) {
-      const c = await compressImage(file);
-      next.push({ file: c, url: URL.createObjectURL(c) });
+    const all = [...(list || [])];
+    const files = all.filter(looksLikeImage);
+    if (all.length && !files.length) { toast('That file is not a photo. Please pick a JPG or PNG image.', 'error'); return; }
+    const room = 4 - photosRef.current.length - processing;
+    if (room <= 0) { toast('You can attach up to 4 photos.', 'error'); return; }
+    if (files.length > room) toast(`You can attach up to 4 photos. Added the first ${room}.`, 'error');
+    const pick = files.slice(0, room);
+    setProcessing((n) => n + pick.length);
+    for (const file of pick) {
+      try {
+        const c = await compressImage(file);
+        if (c.size > 15 * 1048576) { toast('This photo is too large. Please take it again with the camera.', 'error'); continue; }
+        setPhotos((p) => [...p, { file: c, url: URL.createObjectURL(c) }]);
+      } finally { setProcessing((n) => n - 1); }
     }
-    setPhotos((p) => [...p, ...next]);
-    if (errors.photos) setErrors({ ...errors, photos: null });
+    setErrors((e) => (e.photos ? { ...e, photos: null } : e));
   }
 
   function validate() {
     const e = {};
-    if (!photos.length) e.photos = 'Add at least one photo of the clinic.';
+    if (!photos.length) e.photos = processing ? 'Wait a moment, your photo is still being prepared.' : 'Add at least one photo of the clinic.';
     if (f.clinicName.trim().length < 2) e.clinicName = 'Enter the clinic name.';
     if (f.address.trim().length < 5) e.address = 'Enter the full address.';
     if (f.contactPhone.trim() && !/^[+]?[\d\s-]{7,16}$/.test(f.contactPhone.trim())) e.contactPhone = 'Enter a valid phone number.';
@@ -187,20 +221,37 @@ function NewUpdate() {
 
   async function submit(ev) {
     ev.preventDefault();
+    if (progress !== null) return; // already sending
+    if (processing) { toast('Your photo is still being prepared. Submit again in a second.', 'error'); return; }
     if (!validate()) { toast('Please fill the required fields.', 'error'); return; }
     const form = new FormData();
-    photos.forEach((p) => form.append('photos[]', p.file, p.file.name || 'photo.jpg'));
+    photos.forEach((p, i) => form.append('photos[]', p.file, p.file.name || `photo-${i + 1}.jpg`));
     Object.entries(f).forEach(([k, v]) => form.append(k, v.trim()));
     if (loc.state === 'ok') { form.append('lat', loc.lat); form.append('lng', loc.lng); form.append('accuracy', loc.accuracy); }
     setProgress(0);
-    try {
-      await apiUpload('/me/updates', form, (x) => setProgress(x));
-      toast(`Update for ${f.clinicName.trim()} submitted.`);
-      navigate('/');
-    } catch (e) {
-      toast(e.message, 'error');
-      setProgress(null);
+    // one automatic retry on a network drop; the server ignores an exact repeat, so nothing is saved twice
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await apiUpload('/me/updates', form, (x) => setProgress(x));
+        sent.current = true;
+        await drafts.clear(DRAFT_KEY);
+        toast(`Update for ${f.clinicName.trim()} submitted.`);
+        navigate('/');
+        return;
+      } catch (e) {
+        if (e.status === 0 && attempt < 2) { setProgress(0); await new Promise((r) => setTimeout(r, 2500)); continue; }
+        toast(e.status === 0 ? `${e.message} Your update is saved on this phone: tap Submit again when the network is better.` : e.message, 'error');
+        setProgress(null);
+        return;
+      }
     }
+  }
+
+  async function discardDraft() {
+    if (!(await confirmDialog({ title: 'Clear this update?', message: 'The photos and details you entered will be removed.', confirmText: 'Clear', danger: true }))) return;
+    photos.forEach((p) => URL.revokeObjectURL(p.url));
+    setPhotos([]); setF(EMPTY); setRestored(false); setErrors({});
+    drafts.clear(DRAFT_KEY);
   }
 
   return html`<form class="stack narrow" onSubmit=${submit} novalidate>
@@ -208,6 +259,9 @@ function NewUpdate() {
       <button type="button" class="icon-btn" onClick=${() => history.length > 1 ? history.back() : navigate('/')} aria-label="Back"><${Icon} name="left" /></button>
       <div><h1>New clinic update</h1><p>Your daily report: one entry per clinic you visit.</p></div>
     </div>
+    ${restored && html`<div class="notice notice-amber draft-notice"><${Icon} name="clock" size=${18} />
+      <div><b>Unsent update restored</b><span>We kept what you entered last time. Check it and submit.</span></div>
+      <button type="button" class="link" onClick=${discardDraft}>Clear</button></div>`}
 
     <${Card} title="Clinic photos" subtitle="Clear photo of the clinic board / entrance (up to 4)">
       <div class="photo-grid">
@@ -215,7 +269,8 @@ function NewUpdate() {
           <img src=${p.url} alt=${'Photo ' + (i + 1)} />
           <button type="button" class="photo-remove" aria-label="Remove photo" onClick=${() => { URL.revokeObjectURL(p.url); setPhotos(photos.filter((_, j) => j !== i)); }}><${Icon} name="x" size=${14} stroke=${2.6} /></button>
         </div>`)}
-        ${photos.length < 4 && html`
+        ${Array.from({ length: processing }, (_, i) => html`<div class="photo-thumb photo-busy" key=${'busy' + i}><${Spinner} size=${22} /><span>Preparing…</span></div>`)}
+        ${photos.length + processing < 4 && html`
           <button type="button" class="photo-add primary" onClick=${() => camRef.current.click()}><${Icon} name="camera" size=${24} /><span>Take photo</span></button>
           <button type="button" class="photo-add" onClick=${() => galRef.current.click()}><${Icon} name="image" size=${24} /><span>From gallery</span></button>`}
       </div>
@@ -247,7 +302,7 @@ function NewUpdate() {
         </div>
         <${Field} label="Visit outcome" optional>
           <div class="chip-select">${Object.entries(OUTCOMES).map(([k, o]) => html`
-            <button type="button" class=${'chip tone-' + o.tone + (f.outcome === k ? ' active' : '')} onClick=${() => setF({ ...f, outcome: f.outcome === k ? '' : k })}>${o.label}</button>`)}</div>
+            <button type="button" class=${'chip tone-' + o.tone + (f.outcome === k ? ' active' : '')} onClick=${() => setF((p) => ({ ...p, outcome: p.outcome === k ? '' : k }))}>${o.label}</button>`)}</div>
         </${Field}>
         <${Field} label="Notes" optional>
           <textarea rows="3" value=${f.notes} onInput=${set('notes')} placeholder="What was discussed, next steps, best time to call back…" maxlength="1000"></textarea>
@@ -258,7 +313,7 @@ function NewUpdate() {
     <div class="sticky-submit">
       ${progress !== null && html`<div class="progress"><i style=${`width:${Math.round(progress * 100)}%`}></i></div>`}
       <${Button} type="submit" size="lg" icon="send" loading=${progress !== null} class="btn-block">
-        ${progress !== null ? (progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Saving…') : 'Submit update'}
+        ${progress !== null ? (progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Saving…') : processing ? 'Preparing photos…' : 'Submit update'}
       </${Button}>
     </div>
   </form>`;

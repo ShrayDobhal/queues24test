@@ -34,12 +34,14 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   return data;
 }
 
-/** Upload with progress (fetch has no upload progress). */
-export function apiUpload(path, form, onProgress) {
+/** Upload with progress (fetch has no upload progress). Network failures reject with status 0. */
+export function apiUpload(path, form, onProgress, { timeoutMs = 180000 } = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', API + path);
     xhr.withCredentials = true;
+    xhr.timeout = timeoutMs;
+    xhr.ontimeout = () => reject(new ApiError(0, 'The upload took too long: the network is slow. Please try again.'));
     xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
     xhr.onload = () => {
       let data = null;
@@ -192,31 +194,95 @@ export const OUTCOMES = {
 export const LEAVE_TYPES = { casual: 'Casual leave', sick: 'Sick leave', emergency: 'Emergency', other: 'Other' };
 export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/** Downscale a photo in the browser before upload (saves mobile data). */
-export async function compressImage(file, maxSide = 1600, quality = 0.82) {
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file; // e.g. HEIC: send as-is
+/** True for anything that may be a photo. Some Android cameras/galleries report an empty type. */
+export const looksLikeImage = (f) => /^image\//.test(f.type || '') || /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(f.name || '') || !f.type;
+
+// Decode a photo for resizing. <img> honours the EXIF rotation on every current phone browser;
+// createImageBitmap is faster but older Safari/Android reject the orientation option, so it is only a fast path.
+async function decodeImage(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const b = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { src: b, w: b.width, h: b.height, done: () => b.close && b.close() };
+    } catch { /* fall back to <img> */ }
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
   try {
-    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-    if (scale === 1 && file.size < 900 * 1024) return file;
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('decode failed')); img.src = url; });
+  } catch (e) { URL.revokeObjectURL(url); throw e; }
+  return { src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => URL.revokeObjectURL(url) };
+}
+
+/**
+ * Downscale a photo in the browser before upload: a 4-8 MB phone photo becomes ~250-500 KB,
+ * so uploads finish fast on mobile data. Also converts HEIC to JPEG where the browser can read it (iPhone Safari).
+ * Never throws: if the photo can't be read it is sent as it is.
+ */
+export async function compressImage(file, maxSide = 1600, quality = 0.8) {
+  if (!looksLikeImage(file) || file.type === 'image/gif') return file;
+  const webSafe = /^image\/(jpeg|png|webp)$/.test(file.type);
+  let d = null;
+  try {
+    d = await decodeImage(file);
+    if (!d.w || !d.h) throw new Error('empty image');
+    const scale = Math.min(1, maxSide / Math.max(d.w, d.h));
+    if (scale === 1 && webSafe && file.size < 700 * 1024) return file;
     const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    canvas.width = Math.max(1, Math.round(d.w * scale));
+    canvas.height = Math.max(1, Math.round(d.h * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); // PNG transparency → white, not black
+    ctx.drawImage(d.src, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
-    if (!blob || blob.size >= file.size) return file;
-    return new File([blob], (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+    canvas.width = canvas.height = 0; // free memory right away on low-end phones
+    if (!blob) throw new Error('encode failed');
+    if (webSafe && blob.size >= file.size) return file;
+    const name = (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg';
+    try { return new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() }); } catch { blob.name = name; return blob; }
   } catch {
     return file;
+  } finally {
+    if (d) d.done();
   }
 }
+
+// ------------------------------------------------------------------ unsent-form drafts (survive reloads)
+// Android often reloads the page while the camera app is open; a failed upload must not lose the work either.
+// Text goes to localStorage, photos to IndexedDB. Every call is best-effort (private mode may block storage).
+const DRAFT_DB = 'q24crm-drafts';
+function draftDb() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no indexedDB'));
+    const r = indexedDB.open(DRAFT_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('drafts');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function draftTx(mode, fn) {
+  const db = await draftDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('drafts', mode);
+    const out = fn(tx.objectStore('drafts'));
+    tx.oncomplete = () => { db.close(); res(out && 'result' in out ? out.result : undefined); };
+    tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); };
+  });
+}
+export const drafts = {
+  async save(key, value) { try { await draftTx('readwrite', (s) => s.put(value, key)); return true; } catch { return false; } },
+  async load(key) { try { return (await draftTx('readonly', (s) => s.get(key))) || null; } catch { return null; } },
+  async clear(key) { try { await draftTx('readwrite', (s) => s.delete(key)); } catch { /* ignore */ } },
+};
 
 export function getLocation(timeout = 12000) {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('Location is not supported on this device.'));
+    // hard stop: some phones never answer when the permission popup is ignored or dismissed
+    const guard = setTimeout(() => reject(new Error('Could not get your location.')), timeout + 3000);
     navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) }),
-      (e) => reject(new Error(e.code === 1 ? 'Location permission denied.' : 'Could not get your location.')),
+      (p) => { clearTimeout(guard); resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) }); },
+      (e) => { clearTimeout(guard); reject(new Error(e.code === 1 ? 'Location permission denied. Allow location for this site in your browser settings.' : 'Could not get your location.')); },
       { enableHighAccuracy: true, timeout, maximumAge: 60000 },
     );
   });

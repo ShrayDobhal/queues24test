@@ -4,10 +4,10 @@
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const ROOT = path.resolve(__dirname, '..'); const PORT = Number(process.env.PORT || process.argv[2] || 8095);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
-const IGNORED = /^\/(_q24h|sales-crm|lab-partners|tools|blood-test\/api)(\/|$)|\.php$|\.htaccess$|^\/blood-test\/app\.html$/;
+const IGNORED = /^\/(_q24h|sales-crm|tools|blood-test\/api|lab-partners\/api)(\/|$)|\.php$|\.htaccess$|^\/(blood-test|lab-partners)\/app\.html$/;
 http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  if (p === '/blood-test') { res.writeHead(307, { Location: '/blood-test/' }); return res.end(); }
+  if (p === '/blood-test' || p === '/lab-partners') { res.writeHead(307, { Location: p + '/' }); return res.end(); }
   if (IGNORED.test(p)) { res.writeHead(404); return res.end('Not on Vercel (needs PHP)'); }
   let f = path.join(ROOT, p);
   if (!f.startsWith(ROOT)) { res.writeHead(403); return res.end(); }

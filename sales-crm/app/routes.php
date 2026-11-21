@@ -230,6 +230,8 @@ function route(string $method, string $path): void
         }
         if ($is('POST', '/me/updates')) {
             $maxMb = (int) cfg('max_upload_mb', 10);
+            $iniMb = (int) floor(ini_bytes((string) ini_get('upload_max_filesize')) / 1048576);
+            if ($iniMb > 0 && $iniMb < $maxMb) $maxMb = $iniMb; // tell people the real limit of this server
             if (empty($_POST) && empty($_FILES) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) throw bad("The photos are too large to upload. Each photo must be under {$maxMb} MB.");
             $files = uploaded_photos();
             $bb = $_POST;
@@ -260,6 +262,13 @@ function route(string $method, string $path): void
             if ($outcome !== '' && !in_array($outcome, OUTCOMES, true)) throw bad('Invalid visit outcome.');
             $lat = num_in($bb['lat'] ?? null); $lng = num_in($bb['lng'] ?? null); $acc = num_in($bb['accuracy'] ?? null);
             $geo = $lat !== null && $lng !== null && abs($lat) <= 90 && abs($lng) <= 180;
+
+            // A phone that lost signal right after uploading retries automatically: return the update
+            // that was already saved instead of storing the same clinic twice.
+            $since = (new DateTime('-15 minutes', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.v\Z');
+            $dup = q1('SELECT v.id FROM visits v WHERE v.employee_id = ? AND v.clinic_name = ? AND v.address = ? AND v.created_at >= ?
+                AND (SELECT COUNT(*) FROM visit_photos p WHERE p.visit_id = v.id) = CAST(? AS INTEGER) ORDER BY v.id DESC LIMIT 1', [$uid, $clinic, $address, $since, count($checked)]);
+            if ($dup) { json_out(['visit' => serialize_visits(q(VISIT_SELECT . ' WHERE v.id = ?', [(int) $dup['id']]))[0], 'today' => today_context($u), 'duplicate' => true], 200); return; }
 
             $saved = save_photos($checked);
             $pdo = db();
@@ -605,7 +614,8 @@ function route(string $method, string $path): void
         json_out(['ok' => true, 'alertsRaised' => run_inactivity_scan()]);
         return;
     }
-    if ($is('GET', '/health')) { json_out(['ok' => true, 'php' => PHP_VERSION, 'storage' => storage_describe()['provider'], 'email' => mail_method()]); return; }
+    if ($is('GET', '/health')) { json_out(['ok' => true, 'php' => PHP_VERSION, 'storage' => storage_describe()['provider'], 'email' => mail_method(),
+        'uploads' => ['maxFile' => ini_get('upload_max_filesize'), 'maxPost' => ini_get('post_max_size'), 'maxFiles' => (int) ini_get('max_file_uploads'), 'timeLimit' => (int) ini_get('max_execution_time')]]); return; }
 
     throw new HttpError(404, 'Not found');
 }

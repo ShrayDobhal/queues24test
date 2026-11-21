@@ -81,7 +81,7 @@ export function ChangePasswordForm() {
     } catch (err) { setError(err.message); }
     setLoading(false);
   }
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); };
   return html`<form class="form-grid" onSubmit=${submit} novalidate>
     <${Field} label="Current password"><input type="password" value=${f.current} onInput=${set('current')} autocomplete="current-password" /></${Field}>
     <div class="form-row">

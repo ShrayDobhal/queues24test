@@ -9,6 +9,8 @@ declare(strict_types=1);
 if (!defined('CRM_ROOT')) define('CRM_ROOT', dirname(__DIR__)); // .../public_html/sales-crm
 
 $GLOBALS['CFG'] = file_exists(__DIR__ . '/config.php') ? require __DIR__ . '/config.php' : [];
+// local testing only: keep test photos in their own Bunny folder, never next to live photos
+if (getenv('CRM_BUNNY_PREFIX')) $GLOBALS['CFG']['bunny_path_prefix'] = (string) getenv('CRM_BUNNY_PREFIX');
 
 function cfg(string $key, $default = null)
 {
@@ -233,6 +235,13 @@ function now_iso(): string { return (new DateTime('now', new DateTimeZone('UTC')
 
 // ------------------------------------------------------------------ dates (company timezone)
 function today(): string { return date('Y-m-d'); }
+/** '8M' / '2G' / '512K' → bytes (php.ini shorthand). */
+function ini_bytes(string $v): int
+{
+    $v = trim($v); if ($v === '') return 0;
+    $n = (int) $v; $u = strtolower(substr($v, -1));
+    return $u === 'g' ? $n * 1073741824 : ($u === 'm' ? $n * 1048576 : ($u === 'k' ? $n * 1024 : $n));
+}
 function current_month(): string { return date('Y-m'); }
 function time_of(?string $iso): ?string
 {

@@ -8,7 +8,7 @@
  *
  * Test-only changes:
  *   1. Landing page nav: "Get App" removed, "Blood test" button added (desktop + phone menu), spacing fixed
- *   2. /blood-test/index.html static page with DEMO mode (Vercel has no PHP; demo runs in the browser)
+ *   2. /blood-test and /lab-partners static pages in DEMO mode (Vercel has no PHP; one shared in-browser store)
  */
 const fs = require('fs');
 const path = require('path');
@@ -47,8 +47,10 @@ const ctaAnchor = '<button class="btn btn-primary nav-get-started trigger-get-st
 const mobileAnchor = '<a href="#resources" class="nav-link trigger-resources">Resources</a>\n    <div class="mobile-drawer-actions">';
 if (!getAppRe.test(idx) || !idx.includes(ctaAnchor) || !idx.includes(mobileAnchor)) throw new Error('Navigation markup changed in main-site/index.html; update the anchors in tools/sync.js');
 idx = idx.replace(getAppRe, '');
-idx = idx.replace(ctaAnchor, '<a href="/blood-test/" class="nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a>\n        ' + ctaAnchor);
-idx = idx.replace(mobileAnchor, '<a href="#resources" class="nav-link trigger-resources">Resources</a>\n    <a href="/blood-test/" class="nav-link nav-bt-btn nav-bt-mobile"><span aria-hidden="true">🩸</span> Blood test</a>\n    <div class="mobile-drawer-actions">');
+idx = idx.replace(ctaAnchor, '<a href="/blood-test/" class="nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a>\n        '
+  + '<a href="/lab-partners/" class="nav-bt-btn nav-lab-btn" id="nav-lab-partners-btn"><span aria-hidden="true">🧪</span> Lab partners</a>\n        ' + ctaAnchor);
+idx = idx.replace(mobileAnchor, '<a href="#resources" class="nav-link trigger-resources">Resources</a>\n    <a href="/blood-test/" class="nav-link nav-bt-btn nav-bt-mobile"><span aria-hidden="true">🩸</span> Blood test</a>\n'
+  + '    <a href="/lab-partners/" class="nav-link nav-bt-btn nav-bt-mobile nav-lab-btn"><span aria-hidden="true">🧪</span> Lab partners</a>\n    <div class="mobile-drawer-actions">');
 idx = idx.replace('</head>', `  <!-- TEST SITE ONLY: navigation changes -->
   <style>
     .site-header .navbar { gap: 40px; }
@@ -61,20 +63,25 @@ idx = idx.replace('</head>', `  <!-- TEST SITE ONLY: navigation changes -->
       color: #178a5c !important; background: #fff; border: 1.5px solid #1FA36E; border-radius: 999px; transition: background .15s, transform .15s; }
     .nav-bt-btn:hover { background: #E8F6EF; transform: translateY(-1px); }
     .nav-bt-btn::after { display: none !important; }
-    @media (max-width: 1280px) { .site-header .navbar { gap: 28px; } .nav-menu { gap: 22px; } }
+    .nav-lab-btn { color: #2a5bb8 !important; border-color: #4f7fd6; }
+    .nav-lab-btn:hover { background: #ecf2fd; }
+    @media (max-width: 1500px) { .site-header .navbar { gap: 24px; } .nav-menu { gap: 22px; } .nav-actions { gap: 8px; } .nav-bt-btn { padding: 7px 12px; } }
     /* links + buttons no longer fit side by side: use the phone menu */
-    @media (max-width: 1120px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
+    @media (max-width: 1240px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
     .mobile-drawer .nav-bt-mobile { display: flex; margin: 8px 0; padding: 11px 16px; font-size: 1rem; border-bottom: 1.5px solid #1FA36E; }
   </style>
 </head>`);
 fs.writeFileSync(idxPath, idx);
 
-// 4. /blood-test static page for Vercel (PHP hosts keep using index.php + app.html)
-const appHtml = fs.readFileSync(path.join(DEST, 'blood-test', 'app.html'), 'utf8');
-const demoShell = appHtml.replace(/\{\{BASE\}\}/g, '/blood-test')
-  .replace('<script type="module" src="js/bt.js"></script>', '<script src="js/demo-api.js"></script>\n  <script type="module" src="js/bt.js"></script>');
-fs.writeFileSync(path.join(DEST, 'blood-test', 'index.html'), demoShell);
-fs.copyFileSync(path.join(__dirname, 'demo-api.js'), path.join(DEST, 'blood-test', 'js', 'demo-api.js'));
+// 4. /blood-test and /lab-partners static pages for Vercel, in DEMO mode (PHP hosts keep using index.php + app.html).
+//    Both load demo-api.js, which shares one in-browser store, so a patient order reaches the lab portal.
+for (const [dir, entry] of [['blood-test', 'bt.js'], ['lab-partners', 'lp.js']]) {
+  const tag = `<script type="module" src="js/${entry}"></script>`;
+  const shell = fs.readFileSync(path.join(DEST, dir, 'app.html'), 'utf8');
+  if (!shell.includes(tag)) throw new Error(`${dir}/app.html changed; update tools/sync.js`);
+  fs.writeFileSync(path.join(DEST, dir, 'index.html'), shell.replace(/\{\{BASE\}\}/g, '/' + dir).replace(tag, `<script src="js/demo-api.js"></script>\n  ${tag}`));
+  fs.copyFileSync(path.join(__dirname, 'demo-api.js'), path.join(DEST, dir, 'js', 'demo-api.js'));
+}
 execFileSync('php', [path.join(__dirname, 'export-demo-catalog.php'), path.join(SRC, '_q24h'), path.join(DEST, 'blood-test', 'demo-catalog.json')], { stdio: 'inherit' });
 
 console.log('Test site synced into', DEST);

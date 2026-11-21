@@ -16,10 +16,16 @@ require Q24H_ROOT . '/core.php';
 require Q24H_ROOT . '/storage.php';
 require Q24H_ROOT . '/domain.php';
 \Q24H\db();
-$partners = [];
-foreach (\Q24H\q("SELECT c.area_id, c.role, p.name FROM coverage c JOIN partners p ON p.id = c.partner_id") as $r) $partners[$r['area_id']][$r['role']] = $r['name'];
+// lab accounts WITHOUT passwords (the demo accepts any password)
+$cov = []; $labs = [];
+foreach (\Q24H\q('SELECT id, code, name, email, city, state FROM partners WHERE active = 1 ORDER BY id') as $p)
+    $labs[(int) $p['id']] = ['id' => (int) $p['id'], 'code' => $p['code'], 'name' => $p['name'], 'email' => $p['email'], 'city' => $p['city'], 'state' => $p['state'], 'areas' => []];
+foreach (\Q24H\q('SELECT c.area_id, c.role, c.partner_id, a.name, a.kind FROM coverage c JOIN areas a ON a.id = c.area_id ORDER BY a.name') as $r) {
+    $cov[(int) $r['area_id']][$r['role']] = (int) $r['partner_id'];
+    if (isset($labs[(int) $r['partner_id']])) $labs[(int) $r['partner_id']]['areas'][] = ['areaId' => (int) $r['area_id'], 'name' => $r['name'], 'kind' => $r['kind'], 'role' => $r['role']];
+}
 $areas = [];
-foreach (\Q24H\q('SELECT id, name, kind, state FROM areas') as $a) $areas[$a['id']] = ['name' => $a['name'], 'kind' => $a['kind'], 'state' => $a['state'], 'primary' => $partners[$a['id']]['primary'] ?? null, 'backup' => $partners[$a['id']]['backup'] ?? null];
+foreach (\Q24H\q('SELECT id, name, kind, state FROM areas') as $a) $areas[$a['id']] = ['name' => $a['name'], 'kind' => $a['kind'], 'state' => $a['state'], 'primaryId' => $cov[$a['id']]['primary'] ?? null, 'backupId' => $cov[$a['id']]['backup'] ?? null];
 $data = [
     'tests' => \Q24H\catalog_tests(),
     'areas' => \Q24H\areas_catalog(),
@@ -28,8 +34,9 @@ $data = [
     'otpTestMode' => true,
     'acceptTimeoutMin' => 30,
     'areaInfo' => $areas,
+    'partners' => array_values($labs),
 ];
 file_put_contents($out, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 array_map("unlink", array_filter(glob("$tmp/*") ?: [], "is_file")); @unlink("$tmp/.secret");
 @rmdir("$tmp/files"); @rmdir($tmp);
-echo 'Exported ' . count($data['tests']) . ' tests, ' . count($data['areas']) . " states → $out\n";
+echo 'Exported ' . count($data['tests']) . ' tests, ' . count($data['areas']) . ' states, ' . count($data['partners']) . " labs → $out\n";

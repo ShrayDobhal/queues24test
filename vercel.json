@@ -4,6 +4,11 @@
       "source": "/blood-test",
       "destination": "/blood-test/",
       "permanent": false
+    },
+    {
+      "source": "/lab-partners",
+      "destination": "/lab-partners/",
+      "permanent": false
     }
   ],
   "headers": [

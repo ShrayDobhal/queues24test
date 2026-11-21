@@ -142,7 +142,7 @@ function OrderDetail({ id, reloadCounts }) {
           ${o.note && html`<div><span>Patient note</span><b>${o.note}</b></div>`}
         </div>
         ${o.lines.length > 0 && html`<div class="lines">${o.lines.map((l) => html`<div class="sum-row"><span>${l.name}</span><span>₹${l.price}</span></div>`)}
-          <div class="sum-row total"><span>Collect from patient</span><b>₹${o.total}</b></div></div>`}
+          <div class="sum-row total"><span>Order value</span><b>₹${o.total}</b></div></div>`}
         ${o.prescriptions.length > 0 && html`<div><h4 class="detail-h">Prescription</h4><div class="msg-files">${o.prescriptions.map((f) => html`<${FileChip} file=${f} key=${f.id} />`)}</div></div>`}
         ${o.reports.length > 0 && html`<div><h4 class="detail-h">Reports uploaded</h4><div class="msg-files">${o.reports.map((f) => html`<${FileChip} file=${f} key=${f.id} />`)}</div></div>`}
         <details class="timeline"><summary>Timeline (${o.timeline.length})</summary>${o.timeline.map((t) => html`<div class="tl-row"><i></i><span><b>${t.action.replace('_', ' ')}</b>${t.note ? ' · ' + t.note : ''}</span><time>${fmtDateTime(t.at)}</time></div>`)}</details>
