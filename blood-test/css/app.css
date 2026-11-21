@@ -776,3 +776,5 @@ td.sum.p { color: var(--brand-ink); } td.sum.l { color: var(--blue); } td.sum.a 
 .tests-table input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--brand); }
 @media (max-width: 900px) { .lab-modal { grid-template-columns: 1fr; } .lab-chat { height: 55vh; } }
 .kv-inline b { text-align: right; overflow-wrap: anywhere; }
+.danger-icon { color: var(--red); }
+.danger-icon:hover:not(:disabled) { background: var(--red-soft); color: var(--red); }

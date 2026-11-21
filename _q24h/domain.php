@@ -173,6 +173,18 @@ function offer_next(int $orderId, string $actorType = 'system', ?int $actorId = 
     return null;
 }
 
+/** Orders waiting for a lab (no lab was available) in these areas → offer them now. Used when the admin adds/activates a lab. */
+function route_waiting_orders(array $areaIds): int
+{
+    $areaIds = array_values(array_unique(array_map('intval', $areaIds)));
+    if (!$areaIds) return 0;
+    $n = 0;
+    foreach (q("SELECT id FROM orders WHERE status = 'needs_attention' AND partner_id IS NULL AND area_id IN (" . placeholders($areaIds) . ') ORDER BY id', $areaIds) as $o) {
+        if (offer_next((int) $o['id'], 'system', null)) $n++;
+    }
+    return $n;
+}
+
 /** Expire offers that weren't accepted in time and fail over to the backup. Cheap (indexed); runs on every request. */
 function process_timeouts(): void
 {

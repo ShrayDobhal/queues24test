@@ -50,13 +50,12 @@ function seed_all(PDO $pdo): void
     foreach (METROS as [$code, $name, $state, $cities]) {
         $insArea->execute(["M-$code", $name, $state, 'metro', json_encode(array_map(fn($c) => ['name' => $c[0], 'state' => $c[1]], $cities))]);
         $area = (int) $pdo->lastInsertId();
-        $insCov->execute([$area, 'primary', $mkPartner("$code-P", "$name Partner Lab (Primary)", $cities[0][0], $state)]);
-        $insCov->execute([$area, 'backup', $mkPartner("$code-B", "$name Partner Lab (Backup)", $cities[0][0], $state)]);
+        // no placeholder labs: the admin adds real labs and their areas (Admin → Lab partners)
     }
     foreach (STATES as [$code, $state, $city]) {
         $insArea->execute(["S-$code", $state, $state, 'state', '[]']);
         $area = (int) $pdo->lastInsertId();
-        $insCov->execute([$area, 'primary', $mkPartner("$code-01", "$city Partner Lab ($state)", $city, $state)]);
+        // (labs for this state are added by the admin)
     }
     seed_tests($pdo);
 }

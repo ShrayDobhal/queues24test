@@ -161,7 +161,25 @@ function admin_routes(string $method, string $path, int $adminId, string $adminN
         if ($areas !== null) set_partner_areas((int) $p['id'], $areas);
         if (is_bool($b()['active'] ?? null)) { $sets[] = 'active = ?'; $args[] = $b()['active'] ? 1 : 0; if (!$b()['active']) $sets[] = 'token_version = token_version + 1'; }
         if ($sets) { $args[] = (int) $p['id']; run('UPDATE partners SET ' . implode(', ', $sets) . ' WHERE id = ?', $args); }
+        if (($b()['active'] ?? null) === true) tx(fn() => route_waiting_orders(array_column(q('SELECT area_id FROM coverage WHERE partner_id = ?', [(int) $p['id']]), 'area_id')));
         json_out(['partner' => partner_admin_json(q1('SELECT * FROM partners WHERE id = ?', [(int) $p['id']]))]);
+        return;
+    }
+    if ($m = route_match_a($method, $path, 'DELETE', '/partners/(\d+)')) {
+        $pid = (int) $m[0];
+        tx(function () use ($pid, $adminId) {
+            $p = q1('SELECT * FROM partners WHERE id = ?', [$pid]);
+            if (!$p) throw not_found('Lab partner not found.');
+            $busy = (int) q1("SELECT COUNT(*) AS n FROM orders WHERE partner_id = ? AND status IN ('in_review','quoted','scheduled','collected','processing','report_ready')", [$pid])['n'];
+            if ($busy) throw bad("{$p['name']} has $busy order(s) in progress. Let them finish or reassign them first (or deactivate the lab instead).");
+            $waiting = array_column(q("SELECT id FROM orders WHERE partner_id = ? AND status IN ('placed','assigned')", [$pid]), 'id');
+            run("UPDATE assignments SET status = 'revoked', responded_at = ? WHERE partner_id = ? AND status = 'offered'", [now_iso(), $pid]);
+            run('UPDATE orders SET partner_id = NULL, partner_role = NULL WHERE partner_id = ?', [$pid]);
+            run('DELETE FROM assignments WHERE partner_id = ?', [$pid]);
+            run('DELETE FROM partners WHERE id = ?', [$pid]); // coverage rows go with it (ON DELETE CASCADE)
+            foreach ($waiting as $oid) { add_event((int) $oid, 'admin', $adminId, 'unassigned', 'assigned', null, "Lab {$p['name']} removed"); offer_next((int) $oid, 'admin', $adminId); }
+        });
+        json_out(['ok' => true]);
         return;
     }
     if ($m = route_match_a($method, $path, 'GET', '/partners/(\d+)/password')) {
@@ -286,6 +304,7 @@ function set_partner_areas(int $partnerId, array $areas): void
             run('DELETE FROM coverage WHERE area_id = ? AND role = ?', [$areaId, $role]);
             run('INSERT INTO coverage (area_id, role, partner_id) VALUES (?, ?, ?)', [$areaId, $role, $partnerId]);
         }
+        route_waiting_orders(array_keys($areas)); // orders that were waiting in these areas go to this lab now
     });
 }
 

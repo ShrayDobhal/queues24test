@@ -51,6 +51,18 @@ async function detectLocation(areas) {
     : st.cities.length ? { city: st.cities[0].name, other: false } : { city: name || st.name, other: true };
   return { state: st.name, ...city, pincode, geo };
 }
+/** Location card used on the booking and prescription pages: one tap GPS, or pick by hand. */
+function LocationCard({ cat, loc, onLoc, onLocSet }) {
+  if (loc) return html`<button class="loc-banner" onClick=${onLoc}><${Icon} name="pin" size=${18} /><b>${loc.city}, ${loc.state}</b>${loc.geo ? html`<span class="muted small">· GPS</span>` : ''}<span class="link">Change</span></button>`;
+  return html`<div class="stack-sm">
+    <${GpsButton} areas=${cat.areas} onFound=${(r) => {
+      if (r.error) { toast(r.error, 'error'); onLoc(); return; }
+      onLocSet({ state: r.state, city: r.city, other: r.other, pincode: r.pincode, geo: r.geo });
+      toast(`Location set: ${r.city}, ${r.state}`);
+    }} />
+    <button type="button" class="link center-link" onClick=${onLoc}>or choose your city yourself</button>
+  </div>`;
+}
 function GpsButton({ areas, onFound, label = 'Use my current location', small }) {
   const [busy, setBusy] = useState(false);
   async function go() {
@@ -66,16 +78,16 @@ function GpsButton({ areas, onFound, label = 'Use my current location', small })
 let openLogin = () => Promise.reject(new Error('not ready'));
 function LoginHost({ onUser }) {
   const [req, setReq] = useState(null); // {resolve, reject, reason}
-  openLogin = (reason) => new Promise((resolve, reject) => setReq({ resolve, reject, reason }));
+  openLogin = (reason, hint = {}) => new Promise((resolve, reject) => setReq({ resolve, reject, reason, hint }));
   if (!req) return null;
   const close = (u) => { setReq(null); u ? req.resolve(u) : req.reject(new Error('cancelled')); };
-  return html`<${LoginSheet} reason=${req.reason} onDone=${(u) => { onUser(u); close(u); }} onClose=${() => close(null)} />`;
+  return html`<${LoginSheet} reason=${req.reason} hint=${req.hint || {}} onDone=${(u) => { onUser(u); close(u); }} onClose=${() => close(null)} />`;
 }
-function LoginSheet({ reason, onDone, onClose }) {
+function LoginSheet({ reason, hint, onDone, onClose }) {
   const [step, setStep] = useState('phone');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(hint.phone || '');
   const [code, setCode] = useState('');
-  const [name, setName] = useState('');
+  const [name, setName] = useState(hint.name || ''); // filled from the booking form, so nobody types it twice
   const [info, setInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -230,7 +242,7 @@ function nextDays(n) {
   for (let i = 0; i < n; i++) { const x = new Date(d); x.setDate(d.getDate() + i); out.push(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`); }
   return out;
 }
-function BookingFields({ cat, f, setF, user }) {
+function BookingFields({ cat, f, setF, user, onPlace }) {
   const days = nextDays(7);
   const hourNow = new Date().getHours();
   // functional updates: phone autofill fills several fields at once
@@ -250,6 +262,7 @@ function BookingFields({ cat, f, setF, user }) {
       : html`<${GpsButton} small areas=${cat.areas} label="Share my exact location (helps the collection team)" onFound=${(r) => {
           if (!r.geo) { toast(r.error || 'Could not get your location.', 'error'); return; }
           setF((x) => ({ ...x, geo: r.geo, pincode: x.pincode || r.pincode || '' }));
+          if (onPlace) onPlace(r);
           toast(r.pincode ? 'Location added. Pincode filled in.' : 'Location added.');
         }} />`}</div>
     <div class="form-row">
@@ -264,13 +277,28 @@ function BookingFields({ cat, f, setF, user }) {
     })}</div></${Field}>
   </div>`;
 }
+/** Everything the booking needs, checked at once (the server checks again). */
+function bookingProblems(f, cat) {
+  const out = [];
+  const today = nextDays(1)[0];
+  if (String(f.member.name || '').trim().length < 2) out.push("patient's name");
+  const age = Number(f.member.age); if (!age || age < 1 || age > 120) out.push('age');
+  if (!f.member.gender) out.push('gender');
+  if (String(f.address || '').trim().length < 10) out.push('full address (house no., street, area)');
+  if (!/^[1-9]\d{5}$/.test(f.pincode || '')) out.push('6-digit pincode');
+  if (!f.slotDate) out.push('collection date');
+  if (!f.slotWindow || !cat.slots[f.slotWindow]) out.push('time slot');
+  else if (f.slotDate === today && Number(f.slotWindow.slice(0, 2)) < new Date().getHours() + 2) out.push('a later time slot (that one has passed today)');
+  if (f.contactPhone && !/^(\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/.test(f.contactPhone.trim())) out.push('a valid 10-digit phone (or leave it empty)');
+  return out;
+}
 function blankBooking(user) {
   const saved = store.get('q24bt_booking', null);
   return saved || { member: { name: user ? user.name : '', age: '', gender: '' }, address: '', pincode: '', contactPhone: '', slotDate: nextDays(2)[1], slotWindow: '' };
 }
 
 // ------------------------------------------------------------------ cart / checkout
-function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }) {
+function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, onLocSet, ensureUser }) {
   const items = cat.tests.filter((t) => cart.includes(t.id));
   const [f, setF] = useState(() => blankBooking(user));
   const [busy, setBusy] = useState(false);
@@ -283,9 +311,11 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
   const fasting = Math.max(0, ...items.map((t) => t.fastingHours));
 
   async function place() {
-    if (!loc) { onLoc(); return toast('Select your city first.', 'error'); }
+    const missing = bookingProblems(f, cat);
+    if (!loc) missing.unshift('your city');
+    if (missing.length) { toast(`Please add: ${missing.join(', ')}.`, 'error'); document.querySelector('.checkout .card:nth-of-type(2), .checkout section.card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!loc) onLoc(); return; }
     let u = user;
-    try { u = await ensureUser('Verify your number to confirm the booking.'); } catch { return; }
+    try { u = await ensureUser('Verify your number to confirm the booking.', { name: f.member.name.trim(), phone: String(f.contactPhone || '').replace(/\D/g, '').slice(-10) }); } catch { return; }
     setBusy(true);
     try {
       const body = { clientRef: ref.current, items: items.map((t) => t.id), state: loc.state, city: loc.city, ...f, member: { ...f.member, age: Number(f.member.age) || null } };
@@ -309,9 +339,9 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
         ${fasting > 0 && html`<div class="notice notice-amber" style="margin-top:12px"><${Icon} name="alert" size=${18} /><div><b>${fasting} hours fasting needed</b><span>Only water is allowed before the sample is taken. Pick a morning slot.</span></div></div>`}
       </div></section>
       <section class="card"><div class="card-head"><div><h3>Location</h3></div></div><div class="card-body">
-        <button class="loc-banner" onClick=${onLoc}><${Icon} name="pin" size=${18} />${loc ? html`<b>${loc.city}, ${loc.state}</b>` : html`<b>Select your city</b>`}<span class="link">Change</span></button>
+        <${LocationCard} cat=${cat} loc=${loc} onLoc=${onLoc} onLocSet=${onLocSet} />
       </div></section>
-      <section class="card"><div class="card-head"><div><h3>Patient, address & slot</h3></div></div><div class="card-body"><${BookingFields} cat=${cat} f=${f} setF=${setF} user=${user} /></div></section>
+      <section class="card"><div class="card-head"><div><h3>Patient, address & slot</h3></div></div><div class="card-body"><${BookingFields} cat=${cat} f=${f} setF=${setF} user=${user} onPlace=${(r) => { if (!loc && r.state) onLocSet({ state: r.state, city: r.city, other: r.other, pincode: r.pincode, geo: r.geo }); }} /></div></section>
     </div>
     <aside class="summary card"><div class="card-body">
       <h3>Booking summary</h3>
@@ -327,7 +357,7 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
 }
 
 // ------------------------------------------------------------------ prescription upload (chat style)
-function RxStart({ user, loc, onLoc, ensureUser }) {
+function RxStart({ cat, user, loc, onLoc, onLocSet, ensureUser }) {
   const [files, setFiles] = useState([]);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -349,7 +379,7 @@ function RxStart({ user, loc, onLoc, ensureUser }) {
     files.forEach(({ f }) => form.append('files[]', f, f.name || 'prescription.jpg'));
     try {
       const r = await apiUpload('/prescriptions', form);
-      toast('Prescription sent to a partner lab.');
+      toast(r.order && r.order.partner ? `Prescription sent to ${r.order.partner.name}.` : 'Prescription received. We are finding a lab near you.');
       navigate(`/orders/${r.order.id}`);
     } catch (e) { toast(e.message, 'error'); setBusy(false); }
   }
@@ -446,6 +476,8 @@ function ConfirmQuote({ o, cat, user, onClose, onDone }) {
   const [f, setF] = useState(() => ({ ...blankBooking(user), slotDate: nextDays(2)[1], slotWindow: '' }));
   const [busy, setBusy] = useState(false);
   async function submit() {
+    const missing = bookingProblems(f, cat);
+    if (missing.length) return toast(`Please add: ${missing.join(', ')}.`, 'error');
     setBusy(true);
     try { const r = await api(`/orders/${o.id}/confirm`, { method: 'POST', body: { ...f, member: { ...f.member, age: Number(f.member.age) || null } } }); store.set('q24bt_booking', { ...f, geo: null, slotDate: '', slotWindow: '' }); toast('Collection booked!'); onDone(r.order); }
     catch (e) { toast(e.message, 'error'); }
@@ -489,7 +521,7 @@ function App() {
   useEffect(() => { store.set('q24bt_cart', cart); }, [cart]);
   useEffect(() => { if (cat) setCart((c) => c.filter((id) => cat.tests.some((t) => t.id === id))); }, [cat]);
   const toggle = (id) => setCart((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
-  const ensureUser = async (reason) => user || openLogin(reason);
+  const ensureUser = async (reason, hint) => user || openLogin(reason, hint);
   const saveLoc = (l) => { setLoc(l); store.set('q24bt_loc', l); setLocOpen(false); };
   const logout = async () => { await api('/auth/logout', { method: 'POST' }).catch(() => {}); setUser(null); navigate('/'); };
 
@@ -501,8 +533,8 @@ function App() {
   if (err && !cat) page = html`<${ErrorBox} message=${err} onRetry=${() => location.reload()} />`;
   else if (!cat || user === undefined) page = html`<${Loading} />`;
   else if (p === '/' || p === '') page = html`<${Home} cat=${cat} tests=${cat.tests} cart=${cart} toggle=${toggle} loc=${loc} onLoc=${() => setLocOpen(true)} />`;
-  else if (p === '/cart') page = html`<${Checkout} cat=${cat} cart=${cart} toggle=${toggle} clearCart=${() => setCart([])} user=${user} loc=${loc} onLoc=${() => setLocOpen(true)} ensureUser=${ensureUser} />`;
-  else if (p === '/rx') page = html`<${RxStart} user=${user} loc=${loc} onLoc=${() => setLocOpen(true)} ensureUser=${ensureUser} />`;
+  else if (p === '/cart') page = html`<${Checkout} cat=${cat} cart=${cart} toggle=${toggle} clearCart=${() => setCart([])} user=${user} loc=${loc} onLoc=${() => setLocOpen(true)} onLocSet=${saveLoc} ensureUser=${ensureUser} />`;
+  else if (p === '/rx') page = html`<${RxStart} cat=${cat} user=${user} loc=${loc} onLoc=${() => setLocOpen(true)} onLocSet=${saveLoc} ensureUser=${ensureUser} />`;
   else if (needsLogin && !user) page = html`<${Empty} icon="lock" title="Verify your number" action=${html`<${Button} onClick=${() => openLogin().catch(() => {})}>Verify</${Button}>`}>Your orders are private to your mobile number.</${Empty}>`;
   else if (p === '/orders') page = html`<${Orders} />`;
   else if ((m = match('/orders/:id', p))) page = html`<${OrderDetail} key=${m.id} id=${m.id} cat=${cat} user=${user} />`;

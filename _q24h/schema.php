@@ -9,7 +9,7 @@ namespace Q24H;
 
 use PDO;
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function migrate(PDO $pdo): void
 {
@@ -217,6 +217,20 @@ SQL);
             $pdo->exec('ALTER TABLE orders ADD COLUMN geo_lat REAL');
             $pdo->exec('ALTER TABLE orders ADD COLUMN geo_lng REAL');
             $pdo->exec('ALTER TABLE orders ADD COLUMN geo_accuracy INTEGER');
+        }
+        if ($v < 3) {
+            // v3: remove the placeholder labs created at install (emails @partners.queue24.com). Real labs are added by the admin.
+            $now = gmdate('Y-m-d\\TH:i:s.000\\Z');
+            $st = "SELECT id FROM partners WHERE email LIKE '%@partners.queue24.com'";
+            // not collected yet → back to the admin queue ("Needs attention") to give to a real lab; nothing gets stuck
+            $pdo->prepare("UPDATE orders SET partner_id = NULL, partner_role = NULL, status = 'needs_attention', updated_at = ? WHERE partner_id IN ($st) AND status IN ('placed','assigned','in_review','quoted','scheduled')")->execute([$now]);
+            $pdo->prepare("UPDATE assignments SET status = 'revoked', responded_at = ? WHERE status = 'offered' AND partner_id IN ($st)")->execute([$now]);
+            // finished / cancelled orders keep their history, just without the placeholder lab
+            $pdo->exec("UPDATE orders SET partner_id = NULL WHERE partner_id IN ($st) AND status IN ('cancelled','completed')");
+            // only a placeholder holding an already-collected sample is kept (switched off) until that order is finished
+            $pdo->exec("UPDATE partners SET active = 0, token_version = token_version + 1 WHERE id IN ($st) AND id IN (SELECT partner_id FROM orders WHERE partner_id IS NOT NULL)");
+            $pdo->exec("DELETE FROM assignments WHERE partner_id IN ($st) AND partner_id NOT IN (SELECT partner_id FROM orders WHERE partner_id IS NOT NULL)");
+            $pdo->exec("DELETE FROM partners WHERE id IN ($st) AND id NOT IN (SELECT partner_id FROM orders WHERE partner_id IS NOT NULL)");
         }
         $pdo->prepare("INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")->execute([json_encode(SCHEMA_VERSION)]);
         $pdo->exec('COMMIT');

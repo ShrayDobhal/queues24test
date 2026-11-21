@@ -29,10 +29,17 @@ export function AdminApp({ user, route, onLogout }) {
   const mobile = useIsMobile();
   const refreshCounts = async () => {
     try { const d = await api('/admin/dashboard'); setCounts((c) => ({ ...c, ...d.kpis })); } catch { /* ignore */ }
-    try { const h = await api('/admin/health/overview'); setCounts((c) => ({ ...c, labsInstalled: true, labAttention: h.kpis.needsAttention })); }
-    catch (e) { if (e.status === 404) setCounts((c) => ({ ...c, labsInstalled: false })); /* module not installed: hide the tab */ }
+    try {
+      const h = await api('/admin/health/overview');
+      setCounts((c) => {
+        // a new blood-test booking since the last check → tell the admin wherever they are
+        if (c.labOrdersToday !== undefined && h.kpis.ordersToday > c.labOrdersToday) toast(`New blood-test booking${h.kpis.needsAttention ? ` · ${h.kpis.needsAttention} waiting for a lab` : ''}. See Lab partners.`);
+        return { ...c, labsInstalled: true, labAttention: h.kpis.needsAttention, labOrdersToday: h.kpis.ordersToday };
+      });
+    } catch (e) { if (e.status === 404) setCounts((c) => ({ ...c, labsInstalled: false })); /* module not installed: hide the tab */ }
   };
   useEffect(() => { refreshCounts(); }, [p]);
+  useEffect(() => { const t = setInterval(() => document.visibilityState === 'visible' && refreshCounts(), 30000); return () => clearInterval(t); }, []);
   useEffect(() => { setDrawer(false); }, [p]);
 
   let page; let m;
@@ -902,10 +909,9 @@ function LabPartnerList() {
   if (loading && !data) return html`<${Loading} />`;
   if (error && !data) return html`<${ErrorBox} message=${error} onRetry=${reload} />`;
   const items = data.items.filter((p) => !q || `${p.name} ${p.city} ${p.state} ${p.code} ${p.email}`.toLowerCase().includes(q.toLowerCase()));
-  const starters = data.items.filter((x) => x.active && /@partners\.queue24\.com$/.test(x.email)).length;
-  async function offStarters() {
-    if (!(await confirmDialog({ title: `Deactivate ${plural(starters, 'starter lab')}?`, message: 'Only the placeholder labs created at install are switched off. Your own labs stay active. You can turn any of them on again later.', confirmText: 'Deactivate starters', danger: true }))) return;
-    try { const r = await api(`${H}/partners/deactivate-starters`, { method: 'POST', body: {} }); toast(`${plural(r.deactivated, 'starter lab')} deactivated.`); reload(true); } catch (e) { toast(e.message, 'error'); }
+  async function remove(p) {
+    if (!(await confirmDialog({ title: `Delete ${p.name}?`, message: 'The lab login stops working and it gets no new orders. Orders it had not accepted yet go to the next lab of that area (or to Needs attention). Finished orders stay in history.', confirmText: 'Delete lab', danger: true }))) return;
+    try { await api(`${H}/partners/${p.id}`, { method: 'DELETE' }); toast(`${p.name} deleted.`); reload(true); } catch (e) { toast(e.message, 'error'); }
   }
   async function toggle(p) {
     if (p.active && !(await confirmDialog({ title: `Deactivate ${p.name}?`, message: 'They will be signed out and get no new orders. Areas where they are primary will route to the backup lab.', confirmText: 'Deactivate', danger: true }))) return;
@@ -914,10 +920,9 @@ function LabPartnerList() {
   return html`<div class="stack">
     <div class="toolbar"><div class="search"><${Icon} name="search" size=${17} /><input placeholder="Search lab, city, state, code…" value=${q} onInput=${(e) => setQ(e.target.value)} /></div>
       <${Button} icon="plus" onClick=${() => setEdit({})}>Add lab partner</${Button}></div>
-    ${starters > 0 && html`<div class="notice notice-amber"><${Icon} name="alert" size=${18} /><div><b>${plural(starters, 'starter lab')} still active</b>
-      <span>These placeholder labs (emails @partners.queue24.com) were created at install so every area has a lab. Add your real labs with their areas, then switch the starters off. Areas with no active lab show orders under "Needs attention" for you to assign.</span></div>
-      <${Button} size="sm" variant="secondary" onClick=${offStarters}>Deactivate starters</${Button}></div>`}
-    <p class="muted">${plural(data.items.filter((x) => x.active).length, 'active lab')} · each area has a primary lab and optionally a backup.</p>
+    ${data.items.length === 0 ? html`<${Empty} icon="flask" title="No lab partners yet" action=${html`<${Button} icon="plus" onClick=${() => setEdit({})}>Add your first lab</${Button}>`}>
+        Add each lab with its lab code, password and the areas it serves. Until an area has a lab, its bookings wait under <b>Needs attention</b> for you to assign.</${Empty}>`
+      : html`<p class="muted">${plural(data.items.filter((x) => x.active).length, 'active lab')} · each area has a primary lab and optionally a backup.</p>`}
     <div class="partner-grid">${items.map((p) => html`<${HoverCard} key=${p.id} tip=${html`<${TipRows} title=${p.name} rows=${[['Login ID', p.email], ['Lab code', p.code], ['Contact', [p.contactPerson, p.phone].filter(Boolean).join(' · ') || '—'], ['Open orders', p.stats.open], ['Completed', p.stats.completed], ['Accepted / rejected / missed', `${p.stats.accepted} / ${p.stats.rejected} / ${p.stats.expired}`], ['Last login', p.lastLoginAt ? timeAgo(p.lastLoginAt) : 'never']]} />`}>
       <div class=${'partner-card' + (p.active ? '' : ' dim')}>
         <div class="partner-top"><b>${p.name}</b>${!p.active && html`<${Badge} tone="gray">Inactive</${Badge}>`}</div>
@@ -928,6 +933,7 @@ function LabPartnerList() {
           <button class="icon-btn" title="View login" onClick=${() => setPwFor(p)}><${Icon} name="key" size=${16} /></button>
           <button class="icon-btn" title="Edit" onClick=${() => setEdit(p)}><${Icon} name="edit" size=${16} /></button>
           <button class="link" onClick=${() => toggle(p)}>${p.active ? 'Deactivate' : 'Activate'}</button>
+          <button class="icon-btn danger-icon" title="Delete lab" onClick=${() => remove(p)}><${Icon} name="trash" size=${16} /></button>
         </div>
       </div></${HoverCard}>`)}</div>
     ${pwFor && html`<${PasswordModal} account=${pwFor} base=${`${H}/partners`} onClose=${() => setPwFor(null)} onChange=${() => reload(true)} />`}
@@ -997,6 +1003,7 @@ function LabCoverage() {
   if ((areas.loading && !areas.data) || (partners.loading && !partners.data)) return html`<${Loading} />`;
   if (areas.error) return html`<${ErrorBox} message=${areas.error} onRetry=${areas.reload} />`;
   const opts = partners.data.items.filter((p) => p.active);
+  if (!opts.length) return html`<${Empty} icon="flask" title="Add a lab partner first">Create labs in the <b>Partners</b> tab (you can choose their areas there too). Then you can fine-tune primary and backup labs per area here.</${Empty}>`;
   const val = (a, role) => (draft[a.id] && draft[a.id][role] !== undefined ? draft[a.id][role] : (a[role] ? String(a[role].id) : ''));
   const setVal = (a, role, v) => setDraft({ ...draft, [a.id]: { ...(draft[a.id] || {}), [role]: v } });
   async function save(a) {

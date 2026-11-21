@@ -170,3 +170,5 @@
 .or-line::before, .or-line::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .geo-attach { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: -4px; }
 .geo-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--brand-ink); font-size: 13px; font-weight: 600; }
+.center-link { align-self: center; font-size: 13.5px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }

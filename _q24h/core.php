@@ -155,18 +155,30 @@ function affected(string $sql, array $args = []): int
     $st->execute(array_values($args));
     return $st->rowCount();
 }
+/**
+ * Run $fn inside one write transaction. Nested calls join the outer transaction.
+ * Nesting is tracked here, not with PDO::inTransaction(): on PHP < 8.4 that does not see a
+ * transaction started with BEGIN IMMEDIATE, which caused "cannot start a transaction within a transaction".
+ */
 function tx(callable $fn)
 {
+    static $depth = 0;
     $pdo = db();
-    if ($pdo->inTransaction()) return $fn();
+    if ($depth > 0) {
+        $depth++;
+        try { return $fn(); } finally { $depth--; }
+    }
     $pdo->exec('BEGIN IMMEDIATE'); // take the write lock up-front: no lost updates between readers
+    $depth = 1;
     try {
         $r = $fn();
         $pdo->exec('COMMIT');
         return $r;
     } catch (Throwable $e) {
-        $pdo->exec('ROLLBACK');
+        try { $pdo->exec('ROLLBACK'); } catch (Throwable $ignored) { /* already rolled back */ }
         throw $e;
+    } finally {
+        $depth = 0;
     }
 }
 function placeholders(array $list): string { return implode(',', array_fill(0, max(1, count($list)), '?')); }
