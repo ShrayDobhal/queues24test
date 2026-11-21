@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Queue24 helps businesses manage customer waiting lines digitally and communicate queue updates through web, SMS or WhatsApp. End the queue, keep the experience.">
+  <meta name="keywords" content="virtual queue management, digital waitlist, restaurant queues, clinic patient queues, retail queue software, WhatsApp queue updates">
+  <meta name="author" content="Queue24">
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://queue24.com/">
+  <meta property="og:title" content="Queue24 — Virtual Queues, Real Experiences">
+  <meta property="og:description" content="End the queue, keep the experience. Manage customer lines with a simple, powerful and delightful digital experience across web, SMS or WhatsApp.">
+  <meta property="og:image" content="assets/hero_clinic_waiting.jpg?v=20261011_v9">
+
+  <link rel="canonical" href="https://queue24.com/">
+  <title>Queue24 — Virtual Queues, Real Experiences</title>
+
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css?v=20261025_green_v10">
+  <!-- TEST SITE ONLY: Blood test button -->
+  <style>
+    .nav-bt-btn { display: inline-flex; align-items: center; gap: 6px; background: #1FA36E; color: #fff !important; padding: 7px 14px !important; border-radius: 999px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px -8px rgba(31, 163, 110, .8); transition: transform .15s, background .15s; }
+    .nav-bt-btn:hover { background: #178a5c; transform: translateY(-1px); }
+    .nav-bt-btn::after { display: none !important; }
+    .nav-menu .nav-link { white-space: nowrap; }
+    @media (max-width: 1320px) { .nav-menu { gap: 20px; } .nav-actions { gap: 12px; } }
+    /* the full nav + button no longer fits below 1100px: use the phone menu there */
+    @media (max-width: 1100px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
+    .mobile-drawer .nav-bt-mobile { display: flex; justify-content: center; margin: 8px 0; border-bottom: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       SITE NAVBAR
+       ========================================================================== -->
+  <header class="site-header" id="site-header">
+    <div class="container navbar">
+      <!-- Brand Logo -->
+      <a href="#" class="brand-logo" aria-label="Queue24 Home">
+        <span class="logo-symbol">
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="13" stroke="#1FA36E" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="70 12"/>
+            <circle cx="14" cy="14" r="5" fill="#1FA36E"/>
+            <path d="M14 6V14L19 19" stroke="#1FA36E" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Queue24</span>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-menu">
+          <li><a href="#how-it-works" class="nav-link">How it works</a></li>
+          <li><a href="#industries" class="nav-link">For businesses</a></li>
+          <li><a href="#download-app" class="nav-link">Download App</a></li>
+          <li><a href="#pricing" class="nav-link trigger-pricing">Pricing</a></li>
+          <li><a href="#customers" class="nav-link">Our customers</a></li>
+          <li><a href="#resources" class="nav-link trigger-resources">Resources</a></li>
+          <li><a href="/blood-test/" class="nav-link nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <button class="nav-download-btn smart-download-btn" id="nav-download-app-btn" aria-label="Download Queue24 App">
+          <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+          <span>Get App</span>
+        </button>
+        <button class="btn btn-primary nav-get-started trigger-get-started" id="nav-cta-btn">
+          Get started free <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Mobile Toggle Button -->
+      <button class="mobile-toggle" aria-label="Toggle navigation menu" aria-expanded="false" id="mobile-toggle-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu (Outside header to prevent backdrop-filter stacking context traps) -->
+  <div class="mobile-drawer" id="mobile-drawer">
+    <a href="#how-it-works" class="nav-link">How it works</a>
+    <a href="#industries" class="nav-link">For businesses</a>
+    <a href="#download-app" class="nav-link">Download App (iOS &amp; Android)</a>
+    <a href="#pricing" class="nav-link trigger-pricing">Pricing</a>
+    <a href="#customers" class="nav-link">Our customers</a>
+    <a href="#resources" class="nav-link trigger-resources">Resources</a>
+    <a href="/blood-test/" class="nav-link nav-bt-btn nav-bt-mobile"><span aria-hidden="true">🩸</span> Blood test</a>
+    <div class="mobile-drawer-actions">
+      <button class="btn btn-outline smart-download-btn" style="width: 100%; border-color: var(--primary); color: var(--primary-dark); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg> Download App (iOS &amp; Android)</button>
+      <button class="btn btn-primary trigger-get-started" style="width: 100%;">Get started free →</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- ==========================================================================
+         HERO SECTION
+         ========================================================================== -->
+    <section class="hero-section" id="hero">
+      <div class="container hero-grid">
+        <!-- Hero Left Column -->
+        <div class="hero-content">
+          <div class="section-eyebrow">
+            <span class="dot"></span>
+            <span>VIRTUAL QUEUES, REAL EXPERIENCES</span>
+          </div>
+
+          <h1 class="hero-title">
+            <span class="brush-highlight">End the queue</span><br>
+            Keep the experience
+          </h1>
+
+          <p class="hero-copy">
+            Queue24 helps clinics, doctors and receptionists manage patient waiting queues with a simple, powerful and delightful digital experience — on web, SMS or WhatsApp.
+          </p>
+
+          <div class="hero-cta-group">
+            <button class="btn btn-primary trigger-get-started" id="hero-get-started-btn">
+              Get started <span class="btn-arrow">→</span>
+            </button>
+            <button class="btn btn-outline trigger-simulator" id="hero-demo-btn">
+              See how it works <span class="btn-play-icon">▶</span>
+            </button>
+          </div>
+
+          <!-- Official App Store & Google Play Download Strip -->
+          <div class="hero-download-strip">
+            <div class="hero-download-label">
+              <span>Queue24: Clinic Queue App</span>
+              <span class="live-badge">iOS &amp; Android</span>
+            </div>
+            <div class="app-store-badge-group">
+              <!-- App Store Link -->
+              <a href="https://apps.apple.com/in/app/queue24-clinic-queue-app/id6813539619" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-apple" id="hero-badge-appstore" aria-label="Download Queue24: Clinic Queue App on the Apple App Store">
+                <span class="app-badge-icon">
+                  <svg viewBox="0 0 384 512" fill="currentColor">
+                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.9 69.5-34.3z"/>
+                  </svg>
+                </span>
+                <span class="app-badge-text">
+                  <span class="app-badge-sub">Download on the</span>
+                  <span class="app-badge-title">App Store</span>
+                </span>
+                <span class="app-badge-pill">★ 4.9</span>
+              </a>
+
+              <!-- Google Play Link -->
+              <a href="https://play.google.com/store/apps/details?id=com.atzerocost.queue24" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-google" id="hero-badge-playstore" aria-label="Get Queue24: Clinic Queue App on Google Play Store">
+                <span class="app-badge-icon">
+                  <svg viewBox="0 0 512 512">
+                    <path fill="#4285F4" d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z"/>
+                    <path fill="#34A853" d="M47 38.6c-4.2 8.7-6.7 18.8-6.7 30.1v374.6c0 11.3 2.5 21.4 6.7 30.1l226.7-226.7L47 38.6z"/>
+                    <path fill="#FBBC04" d="M385.4 337.8L104.6 499l220.7-221.3 60.1 60.1z"/>
+                    <path fill="#EA4335" d="M451.8 284.4l-66.4-38.2-60.1-60.1 60.1-60.1 66.4-38.2c19.1-11 39.9-2.3 46.2 7.7V417c-6.3 10-27.1 18.7-46.2 7.7z"/>
+                  </svg>
+                </span>
+                <span class="app-badge-text">
+                  <span class="app-badge-sub">GET IT ON</span>
+                  <span class="app-badge-title">Google Play</span>
+                </span>
+                <span class="app-badge-pill">★ 4.8</span>
+              </a>
+            </div>
+
+            <!-- Dynamic Device Detection Hint -->
+            <div class="smart-device-hint" id="smart-device-hint">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg> <span id="smart-device-text">Tap store button above to download for your device</span>
+            </div>
+          </div>
+
+          <!-- 4 Value Propositions -->
+          <div class="hero-props-grid">
+            <div class="prop-item">
+              <span class="prop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </span>
+              <span class="prop-label">Zero crowded<br>waiting rooms</span>
+            </div>
+
+            <div class="prop-item">
+              <span class="prop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              </span>
+              <span class="prop-label">Real-time updates<br>for patients</span>
+            </div>
+
+            <div class="prop-item">
+              <span class="prop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </span>
+              <span class="prop-label">Empower doctors<br>&amp; receptionists</span>
+            </div>
+
+            <div class="prop-item">
+              <span class="prop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
+              <span class="prop-label">Works via SMS<br>&amp; WhatsApp</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Right Column Visual Composition (Integrated Clinic Stage) -->
+        <div class="hero-stage-wrap">
+          <div class="hero-stage">
+            <!-- Background Clinic Scene -->
+            <img src="assets/hero_clinic_waiting.jpg?v=20261020_ind" alt="Calm modern Indian clinic waiting lounge with relaxed patients in New Delhi" class="hero-stage-bg" width="1376" height="768" loading="eager">
+
+            <!-- Hand Annotation: Same clinic, no long queues -->
+            <div class="annotation hero-stage-ann-top">
+              SAME CLINIC <span>⤵</span><br>ZERO WAITING ROOM CHAOS
+            </div>
+
+            <!-- Central Phone Mockup -->
+            <div class="hero-stage-phone">
+              <div class="smartphone-frame">
+                <div class="phone-island"></div>
+                <div class="phone-screen">
+                  <!-- Phone Header -->
+                  <div class="phone-nav-bar">
+                    <div class="phone-logo">
+                      <span class="dot"></span>
+                      <span>Queue24</span>
+                    </div>
+                    <div class="phone-menu-icon">
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+
+                  <div class="phone-sub-eyebrow">You're in queue for consultation</div>
+                  <div class="phone-store-name">CarePoint Family Clinic</div>
+
+                  <!-- Token Number Display -->
+                  <div class="phone-token-display">
+                    <div class="phone-token-number">#12</div>
+                    <div class="phone-token-wait">
+                      Estimated wait time: <strong>~ 14 minutes</strong>
+                    </div>
+                  </div>
+
+                  <!-- Stepper Progress Tracker -->
+                  <div class="phone-stepper">
+                    <div class="stepper-track">
+                      <div class="stepper-line"></div>
+                      <div class="stepper-line-active"></div>
+                      <div class="step-node completed"></div>
+                      <div class="step-node active"></div>
+                      <div class="step-node"></div>
+                    </div>
+                    <div class="stepper-labels">
+                      <span>Checked in</span>
+                      <span class="active">In queue</span>
+                      <span>With doctor</span>
+                    </div>
+                  </div>
+
+                  <!-- Notification Channel Preferences -->
+                  <div class="phone-notify-card">
+                    <div class="notify-title">You'll get notified when doctor is ready</div>
+                    <div class="notify-channel-pills">
+                      <button class="channel-pill" data-channel="SMS">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        SMS
+                      </button>
+                      <button class="channel-pill active" data-channel="WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4 4-4-4"></path></svg>
+                        WhatsApp
+                      </button>
+                      <button class="channel-pill" data-channel="Push">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        Push
+                      </button>
+                    </div>
+                  </div>
+
+                  <a href="#simulator" class="phone-view-details trigger-simulator">
+                    View details <span style="font-size: 0.8rem;">→</span>
+                  </a>
+
+                  <a href="#download-app" class="phone-app-teaser smart-download-btn" aria-label="Get Queue24 Clinic Queue App">
+                    <span class="phone-app-teaser-text">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+                      Queue24: Clinic Queue App
+                    </span>
+                    <span class="phone-app-teaser-badge">iOS &amp; Android</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- WhatsApp Notification Card (Right of Phone) -->
+            <div class="hero-stage-notif">
+              <div class="notif-header">
+                <div class="notif-sender">
+                  <span class="notif-app-icon">💬</span>
+                  <span>Queue24 Clinic Alert</span>
+                </div>
+                <span class="notif-time">now</span>
+              </div>
+              <div class="notif-body">
+                <strong>Your turn is coming up!</strong> Dr. Rajesh Mehta is ready for your consultation at CarePoint Clinic 🩺
+              </div>
+            </div>
+
+            <!-- Hand Annotation: Happier Patients -->
+            <div class="annotation hero-stage-ann-side">
+              HAPPIER<br>PATIENTS<br>SMOOTHER<br>CLINIC
+            </div>
+
+            <!-- Clinic Token Status Display (Bottom Right) -->
+            <div class="hero-stage-chalkboard">
+              <div class="chalk-text-1">CarePoint OPD</div>
+              <div class="chalk-text-2">Live Tokens</div>
+              <div class="chalk-smile">Zero Waiting :)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         INDUSTRY SECTION (2-Column Split Layout Matching Reference Exactly)
+         ========================================================================== -->
+    <section class="industry-section" id="industries">
+      <div class="container industry-split-grid">
+        <div class="industry-sidebar">
+          <div class="section-eyebrow">
+            <span class="dot"></span>
+            <span>FOR HEALTHCARE &amp; CLINICS</span>
+          </div>
+
+          <h2 class="serif-heading industry-title">
+            Works for every<br>doctor and clinic
+          </h2>
+
+          <p class="industry-sub">
+            From busy OPD polyclinics and pediatricians to dental practices and diagnostic pathology labs — Queue24 eliminates waiting room congestion.
+          </p>
+        </div>
+
+        <div class="industry-cards-grid">
+          <!-- Card 1: General & Family Practice -->
+          <article class="industry-card" data-industry="general" tabindex="0" role="button" aria-label="Explore General Practice patient queues">
+            <div class="industry-img-wrap">
+              <img src="assets/clinic_general.jpg?v=20261020_ind" alt="Indian general physician doctor consulting with patient at clinic desk" width="600" height="400" loading="eager">
+            </div>
+            <div class="industry-content">
+              <h3 class="industry-card-title">General &amp; Family Practice</h3>
+              <p class="industry-card-desc">Walk-in OPDs, consultation queues and prescription reviews.</p>
+              <div class="industry-card-footer">
+                <span class="circle-arrow-btn">→</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2: Dental & Specialty Clinics -->
+          <article class="industry-card" data-industry="dental" tabindex="0" role="button" aria-label="Explore Dental and Specialty Clinic queue management">
+            <div class="industry-img-wrap">
+              <img src="assets/clinic_dental.jpg?v=20261020_ind" alt="Indian dentist in modern dental clinic operatory in Mumbai" width="600" height="400" loading="eager">
+            </div>
+            <div class="industry-content">
+              <h3 class="industry-card-title">Dental &amp; Specialty Clinics</h3>
+              <p class="industry-card-desc">Timed procedures, sanitized bays and scheduled appointments.</p>
+              <div class="industry-card-footer">
+                <span class="circle-arrow-btn">→</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 3: Diagnostic & Pathology Labs -->
+          <article class="industry-card" data-industry="diagnostic" tabindex="0" role="button" aria-label="Explore Diagnostic and Pathology Lab queues">
+            <div class="industry-img-wrap">
+              <img src="assets/clinic_diagnostic.jpg?v=20261020_ind" alt="Indian medical laboratory technician analyzing test tube samples" width="600" height="400" loading="eager">
+            </div>
+            <div class="industry-content">
+              <h3 class="industry-card-title">Diagnostic &amp; Pathology Labs</h3>
+              <p class="industry-card-desc">Fasting blood tests, scans and digital report pickup.</p>
+              <div class="industry-card-footer">
+                <span class="circle-arrow-btn">→</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 4: Pediatric & Maternity Care -->
+          <article class="industry-card" data-industry="pediatric" tabindex="0" role="button" aria-label="Explore Pediatric and Maternity Clinic waiting solutions">
+            <div class="industry-img-wrap">
+              <img src="assets/clinic_pediatric.jpg?v=20261020_ind" alt="Indian mother and child in cheerful pediatric clinic waiting room" width="600" height="400" loading="eager">
+            </div>
+            <div class="industry-content">
+              <h3 class="industry-card-title">Pediatric &amp; Maternity Care</h3>
+              <p class="industry-card-desc">Stress-free waiting for parents with calm priority queues.</p>
+              <div class="industry-card-footer">
+                <span class="circle-arrow-btn">→</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         PRODUCT DASHBOARD SHOWCASE (Dark Section #111111 - 2-Column Split)
+         ========================================================================== -->
+    <section class="showcase-section" id="features">
+      <div class="container showcase-grid">
+        <!-- Showcase Left Column -->
+        <div class="showcase-content">
+          <div class="section-eyebrow dark-eyebrow">
+            <span class="dot"></span>
+            <span>POWERFUL YET SIMPLE</span>
+          </div>
+
+          <h2 class="serif-heading showcase-title">
+            Everything you<br>need to manage<br>patient queues
+          </h2>
+
+          <p class="showcase-copy">
+            A real-time doctor &amp; receptionist dashboard, smart WhatsApp patient alerts and consultation insights — all in one place.
+          </p>
+
+          <button class="btn btn-primary trigger-get-started" id="btn-explore-features">
+            Explore features <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- Showcase Dual Mockup: Dashboard Window + Companion QR Smartphone -->
+        <div class="showcase-visual-dual">
+          <!-- Full Interactive Dashboard Window Mockup -->
+          <div class="dashboard-window">
+            <div class="window-header">
+              <div class="window-dots">
+                <span class="window-dot red"></span>
+                <span class="window-dot yellow"></span>
+                <span class="window-dot green"></span>
+              </div>
+              <div class="window-search-bar">
+                <span>🔍</span>
+                <span>Search patients, tokens or MRN...</span>
+              </div>
+              <div class="window-user-avatar">DR</div>
+            </div>
+
+            <div class="dash-layout">
+              <!-- Left Mini Sidebar -->
+              <aside class="dash-sidebar">
+                <div class="dash-nav-item active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  <span>OPD Queue</span>
+                </div>
+                <div class="dash-nav-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  <span>OPD Rooms</span>
+                </div>
+                <div class="dash-nav-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  <span>Doctors</span>
+                </div>
+                <div class="dash-nav-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                  <span>Patients</span>
+                </div>
+                <div class="dash-nav-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                  <span>Analytics</span>
+                </div>
+                <div class="dash-nav-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                  <span>Settings</span>
+                </div>
+              </aside>
+
+              <!-- Main Dashboard Area -->
+              <div class="dash-main-area">
+                <div class="dash-top-bar">
+                  <div class="dash-venue-title">
+                    <span>Metro Health Polyclinic</span>
+                    <span class="live-pill">Live</span>
+                  </div>
+                </div>
+
+                <!-- Metrics & Trend Chart Row -->
+                <div class="dash-metrics-chart-row">
+                  <div class="dash-metrics-col">
+                    <div class="dash-stat-card">
+                      <div class="dash-stat-val" id="metric-in-queue">14</div>
+                      <div class="dash-stat-lbl">Patients in waiting</div>
+                    </div>
+                    <div class="dash-stat-card">
+                      <div class="dash-stat-val">~ 12 min</div>
+                      <div class="dash-stat-lbl">Avg consult time</div>
+                    </div>
+                    <div class="dash-stat-card">
+                      <div class="dash-stat-val" id="metric-total-today">86</div>
+                      <div class="dash-stat-lbl">Patients today</div>
+                    </div>
+                  </div>
+
+                  <!-- Live Queue Trend Bar Chart -->
+                  <div class="dash-chart-card">
+                    <div class="chart-header">Live Patient Queue Trend</div>
+                    <div class="chart-bars-wrap">
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 35%;"></div>
+                        <span class="col-label">10am</span>
+                      </div>
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 60%;"></div>
+                        <span class="col-label">11am</span>
+                      </div>
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 95%;"></div>
+                        <span class="col-label">12pm</span>
+                      </div>
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 85%;"></div>
+                        <span class="col-label">1pm</span>
+                      </div>
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 65%;"></div>
+                        <span class="col-label">2pm</span>
+                      </div>
+                      <div class="chart-col">
+                        <div class="bar-fill" style="height: 45%;"></div>
+                        <span class="col-label">3pm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Current Queue Table -->
+                <div class="dash-table-wrap">
+                  <div class="dash-table-title">Current Patient Queue</div>
+                  <table class="dash-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Patient Name</th>
+                        <th>Doctor &amp; Room</th>
+                        <th>Est. Wait</th>
+                        <th style="text-align: right;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="token-tag">#12</span></td>
+                        <td>Priya Sharma</td>
+                        <td>Dr. Rajesh Mehta (OPD 1)</td>
+                        <td>~ 4 min</td>
+                        <td style="text-align: right;"><button class="action-btn-small" data-action="call">Call In</button></td>
+                      </tr>
+                      <tr>
+                        <td><span class="token-tag">#13</span></td>
+                        <td>Rahul Verma</td>
+                        <td>Dr. Ananya Roy (OPD 2)</td>
+                        <td>~ 14 min</td>
+                        <td style="text-align: right;"><button class="action-btn-small" data-action="notify">Notify</button></td>
+                      </tr>
+                      <tr>
+                        <td><span class="token-tag">#14</span></td>
+                        <td>Ananya Mishra</td>
+                        <td>Dr. Rajesh Mehta (OPD 1)</td>
+                        <td>~ 22 min</td>
+                        <td style="text-align: right;"><button class="action-btn-small" data-action="notify">Notify</button></td>
+                      </tr>
+                      <tr>
+                        <td><span class="token-tag">#15</span></td>
+                        <td>Sameer Patel</td>
+                        <td>Diagnostic Lab (Room 3)</td>
+                        <td>~ 28 min</td>
+                        <td style="text-align: right;"><button class="action-btn-small" data-action="notify">Notify</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Companion Smartphone Mockup with QR Code -->
+          <div class="showcase-phone-card">
+            <div class="showcase-phone-screen">
+              <div class="qr-phone-logo">Queue24</div>
+              <div class="qr-phone-title">Join the patient queue</div>
+              <div class="qr-phone-subtitle">Metro Health Polyclinic, OPD Floor 1</div>
+
+              <div class="qr-code-box trigger-simulator" title="Click to test patient token simulation">
+                <!-- Clean SVG QR Code -->
+                <svg viewBox="0 0 100 100" fill="#111111" xmlns="http://www.w3.org/2000/svg">
+                  <!-- QR Corner Markers -->
+                  <rect x="5" y="5" width="26" height="26" rx="4" fill="none" stroke="#111111" stroke-width="5"/>
+                  <rect x="12" y="12" width="12" height="12" fill="#111111"/>
+
+                  <rect x="69" y="5" width="26" height="26" rx="4" fill="none" stroke="#111111" stroke-width="5"/>
+                  <rect x="76" y="12" width="12" height="12" fill="#111111"/>
+
+                  <rect x="5" y="69" width="26" height="26" rx="4" fill="none" stroke="#111111" stroke-width="5"/>
+                  <rect x="12" y="76" width="12" height="12" fill="#111111"/>
+
+                  <!-- Data Dots -->
+                  <rect x="38" y="8" width="6" height="6"/>
+                  <rect x="48" y="8" width="6" height="6"/>
+                  <rect x="38" y="20" width="6" height="6"/>
+                  <rect x="52" y="20" width="6" height="6"/>
+                  <rect x="8" y="38" width="6" height="6"/>
+                  <rect x="20" y="44" width="6" height="6"/>
+                  <rect x="38" y="38" width="10" height="10" fill="#1FA36E"/>
+                  <rect x="52" y="38" width="8" height="6"/>
+                  <rect x="68" y="38" width="6" height="6"/>
+                  <rect x="82" y="44" width="8" height="6"/>
+                  <rect x="38" y="54" width="6" height="8"/>
+                  <rect x="48" y="54" width="8" height="6"/>
+                  <rect x="60" y="54" width="6" height="6"/>
+                  <rect x="74" y="54" width="6" height="8"/>
+                  <rect x="38" y="70" width="8" height="6"/>
+                  <rect x="50" y="78" width="8" height="6"/>
+                  <rect x="62" y="70" width="8" height="6"/>
+                  <rect x="76" y="78" width="8" height="8"/>
+                  <rect x="86" y="68" width="6" height="6"/>
+                </svg>
+              </div>
+
+              <div class="qr-helper-text">Scan to get your digital patient token:</div>
+              <div class="qr-url-badge">queue24.com/clinic-token</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         HOW IT WORKS (2-Column Split Timeline Layout Matching Reference Exactly)
+         ========================================================================== -->
+    <section class="how-section" id="how-it-works">
+      <div class="container how-split-grid">
+        <div class="how-sidebar">
+          <div class="section-eyebrow">
+            <span class="dot"></span>
+            <span>HOW IT WORKS</span>
+          </div>
+
+          <h2 class="serif-heading how-title">
+            Get your clinic live<br>in minutes
+          </h2>
+
+          <p class="how-copy">
+            No complex hospital software. No expensive token kiosks. Just a better way for doctors, receptionists and patients to connect.
+          </p>
+        </div>
+
+        <!-- 4-Step Horizontal Timeline Matching Reference Exactly -->
+        <div class="timeline-track">
+          <!-- Step 01 -->
+          <div class="timeline-step active" data-step="0">
+            <div class="step-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+            <div class="step-num">01</div>
+            <h3 class="step-heading">Configure your clinic rooms</h3>
+            <p class="step-desc">Enter doctor names, OPD room numbers and average consultation durations.</p>
+          </div>
+
+          <!-- Step 02 -->
+          <div class="timeline-step" data-step="1">
+            <div class="step-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+            <div class="step-num">02</div>
+            <h3 class="step-heading">Patients join in 5 seconds</h3>
+            <p class="step-desc">Via reception QR code, web portal, SMS or WhatsApp.</p>
+          </div>
+
+          <!-- Step 03 -->
+          <div class="timeline-step" data-step="2">
+            <div class="step-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="step-num">03</div>
+            <h3 class="step-heading">Reception &amp; doctors manage live</h3>
+            <p class="step-desc">Call next, hold or notify patients with a single tap from any screen.</p>
+          </div>
+
+          <!-- Step 04 -->
+          <div class="timeline-step" data-step="3">
+            <div class="step-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+            <div class="step-num">04</div>
+            <h3 class="step-heading">Calm waiting and happy patients</h3>
+            <p class="step-desc">Zero crowded waiting rooms, relaxed patients and on-time consultations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         AUTOMATED CUSTOMER NOTIFICATIONS & BUSINESS RESULTS (Balanced Panels)
+         ========================================================================== -->
+    <section class="results-notif-section">
+      <div class="container split-grid">
+        <!-- Left: Automated Patient Notifications (Soft Green Healthcare Card) -->
+        <div class="notif-feature-card">
+          <div class="notif-phone-mini">
+            <div class="notif-phone-screen">
+              <div class="phone-logo" style="margin-bottom: 6px;">
+                <span class="dot"></span>
+                <span>Queue24</span>
+              </div>
+              <div class="mini-phone-msg">
+                <div class="mini-msg-header">
+                  <span class="mini-msg-sender">💬 Queue24 Clinic Alert</span>
+                  <span class="mini-msg-time">now</span>
+                </div>
+                <div class="mini-msg-text">
+                  <strong>Your turn is next!</strong><br>
+                  Dr. Rajesh Mehta is ready for your consultation in OPD Room 1. Please proceed inside.
+                </div>
+                <a href="#simulator" class="mini-msg-btn trigger-simulator">View live token</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="notif-content-side">
+            <h2 class="serif-heading notif-card-title">
+              Keep patients<br>informed automatically
+            </h2>
+            <p class="notif-card-copy">
+              Send real-time consultation updates via WhatsApp, SMS or push alerts. No more anxious patients crowding the doctor's door or receptionist counter asking "How much longer?"
+            </p>
+            <div>
+              <button class="circle-arrow-btn trigger-simulator" aria-label="Test automated patient notification preview">→</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Business Results Card -->
+        <div class="results-card">
+          <div class="section-eyebrow">
+            <span class="dot"></span>
+            <span>CLINICAL RESULTS</span>
+          </div>
+
+          <h2 class="serif-heading results-title">
+            Shorter waiting times<br>Calmer clinic lounges
+          </h2>
+          <div class="results-subtitle-note">Observed benchmarks across outpatient clinics and diagnostic practices</div>
+
+          <div class="metrics-row">
+            <div class="metric-box">
+              <div class="metric-number">
+                <span>65%</span>
+                <span class="arrow-green">↓</span>
+              </div>
+              <div class="metric-label">less waiting room crowding</div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-number">
+                <span>98%</span>
+                <span class="arrow-green">↑</span>
+              </div>
+              <div class="metric-label">patient satisfaction rate</div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-number">
+                <span>25 min</span>
+                <span class="arrow-green">↑</span>
+              </div>
+              <div class="metric-label">saved per doctor per shift</div>
+            </div>
+          </div>
+
+          <div class="metrics-footnote">* Clinical operational benchmarks based on outpatient polyclinic case studies</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         CUSTOMER TESTIMONIALS (CLINIC ONLY: DOCTORS, PATIENTS & RECEPTIONISTS)
+         ========================================================================== -->
+    <section class="testimonials-section" id="customers">
+      <div class="container">
+        <div class="testimonials-header">
+          <div class="section-eyebrow">
+            <span class="dot"></span>
+            <span>WHAT DOCTORS &amp; RECEPTIONISTS SAY</span>
+          </div>
+        </div>
+
+        <div class="testimonials-grid">
+          <!-- Testimonial 1: Senior Doctor / Clinic Director -->
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              “Queue24 eliminated our waiting room crowding completely. Patients now relax outside or arrive right on time, and our doctors run consultations on schedule with zero stress.”
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img src="assets/avatar_doctor_rajesh.jpg?v=20261011_v9" alt="Dr. Rajesh Mehta, Medical Director" width="84" height="84" loading="eager">
+              </div>
+              <div class="author-info">
+                <span class="author-name">Dr. Rajesh Mehta</span>
+                <span class="author-role">Chief Physician &amp; Medical Director, Metro Health Clinic</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 2: Head Clinic Receptionist -->
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              “Our reception desk used to be overwhelmed with anxious patients asking when their turn was. Now WhatsApp updates them automatically, saving our staff 3+ hours every single day.”
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img src="assets/avatar_receptionist_sunita.jpg?v=20261011_v9" alt="Sunita Deshmukh, Reception Lead" width="84" height="84" loading="eager">
+              </div>
+              <div class="author-info">
+                <span class="author-name">Sunita Deshmukh</span>
+                <span class="author-role">Head Clinic Receptionist, Sanjeevani Polyclinic</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3: Pediatric Specialist -->
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              “Parents with sick children hate crowded waiting areas. Queue24 allows parents to wait in their cars or open gardens until our pediatric bay is completely sanitized and ready.”
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img src="assets/avatar_dr_ananya.jpg?v=20261011_v9" alt="Dr. Ananya Roy, Pediatric Specialist" width="84" height="84" loading="eager">
+              </div>
+              <div class="author-info">
+                <span class="author-name">Dr. Ananya Roy</span>
+                <span class="author-role">Pediatric Specialist, Little Care Children's Clinic</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         OFFICIAL MOBILE APP DOWNLOAD SECTION (iOS & Android)
+         ========================================================================== -->
+    <section class="app-download-section" id="download-app">
+      <div class="container">
+        <div class="app-download-card">
+          <!-- Left Column: Copy & Actions -->
+          <div class="app-download-content">
+            <div class="section-eyebrow">
+              <span class="dot"></span>
+              <span>OFFICIAL CLINIC &amp; PATIENT APP</span>
+            </div>
+
+            <h2 class="serif-heading app-download-title">
+              Manage queues anywhere with<br>Queue24: Clinic Queue App
+            </h2>
+
+            <p class="app-download-desc">
+              Designed for patients, doctors, and receptionists. Track wait times live, get WhatsApp &amp; push alerts, and eliminate waiting room crowding from any iOS or Android device.
+            </p>
+
+            <ul class="app-download-features">
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>For Patients:</strong> Join queue, track live waiting position &amp; get ready alerts</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>For Doctors:</strong> Manage OPD waiting list, view patient info &amp; call next token</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>For Receptionists:</strong> Fast token issuance, lobby coordination &amp; seamless OPD flow</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>100% Free to Download:</strong> Patient and receptionist functionality available with zero subscription</span>
+              </li>
+            </ul>
+
+            <!-- Store Download Badges -->
+            <div class="app-store-badge-group">
+              <!-- App Store Link -->
+              <a href="https://apps.apple.com/in/app/queue24-clinic-queue-app/id6813539619" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-apple" aria-label="Download Queue24: Clinic Queue App on the Apple App Store">
+                <span class="app-badge-icon">
+                  <svg viewBox="0 0 384 512" fill="currentColor">
+                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.9 69.5-34.3z"/>
+                  </svg>
+                </span>
+                <span class="app-badge-text">
+                  <span class="app-badge-sub">Download on the</span>
+                  <span class="app-badge-title">App Store</span>
+                </span>
+                <span class="app-badge-pill">iOS 15+</span>
+              </a>
+
+              <!-- Google Play Link -->
+              <a href="https://play.google.com/store/apps/details?id=com.atzerocost.queue24" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-google" aria-label="Get Queue24: Clinic Queue App on Google Play Store">
+                <span class="app-badge-icon">
+                  <svg viewBox="0 0 512 512">
+                    <path fill="#4285F4" d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z"/>
+                    <path fill="#34A853" d="M47 38.6c-4.2 8.7-6.7 18.8-6.7 30.1v374.6c0 11.3 2.5 21.4 6.7 30.1l226.7-226.7L47 38.6z"/>
+                    <path fill="#FBBC04" d="M385.4 337.8L104.6 499l220.7-221.3 60.1 60.1z"/>
+                    <path fill="#EA4335" d="M451.8 284.4l-66.4-38.2-60.1-60.1 60.1-60.1 66.4-38.2c19.1-11 39.9-2.3 46.2 7.7V417c-6.3 10-27.1 18.7-46.2 7.7z"/>
+                  </svg>
+                </span>
+                <span class="app-badge-text">
+                  <span class="app-badge-sub">GET IT ON</span>
+                  <span class="app-badge-title">Google Play</span>
+                </span>
+                <span class="app-badge-pill">Android</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive App Card & Scan QR Code -->
+          <div class="app-download-preview">
+            <div class="app-preview-header">
+              <img src="assets/queue24_app_icon.png" alt="Queue24 App Icon" class="app-preview-icon" width="54" height="54">
+              <div>
+                <div class="app-preview-title">Queue24: Clinic Queue App</div>
+                <div class="app-preview-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.9 · Health &amp; Medical</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- QR Code Tabbed Box -->
+            <div class="qr-box-container">
+              <div class="qr-box-tabs">
+                <button type="button" class="qr-tab-btn active" data-target="qr-ios">Apple iOS</button>
+                <button type="button" class="qr-tab-btn" data-target="qr-android">Android</button>
+              </div>
+
+              <!-- iOS QR -->
+              <div class="qr-image-wrapper" id="qr-ios-wrapper">
+                <img src="assets/qr_app_store.svg" alt="Scan QR code for Apple App Store download" width="150" height="150">
+              </div>
+
+              <!-- Android QR (hidden initially) -->
+              <div class="qr-image-wrapper" id="qr-android-wrapper" style="display: none;">
+                <img src="assets/qr_play_store.svg" alt="Scan QR code for Google Play download" width="150" height="150">
+              </div>
+
+              <div class="qr-box-caption" id="qr-caption-text">
+                Scan with iPhone / iPad camera to download from App Store
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         FINAL CTA ("Ready to eliminate waiting room chaos")
+         ========================================================================== -->
+    <section class="final-cta-section" id="get-started">
+      <div class="container">
+        <div class="final-cta-card">
+          <div class="final-cta-content">
+            <div class="section-eyebrow">
+              <span class="dot"></span>
+              <span>CALM CLINICS, DELIGHTED PATIENTS</span>
+            </div>
+
+            <h2 class="serif-heading cta-main-title">
+              Ready to eliminate<br>waiting room chaos
+            </h2>
+
+            <p class="cta-main-sub">
+              Join hundreds of doctors and clinics that provide a stress-free waiting experience for their patients.
+            </p>
+
+            <div class="cta-button-row">
+              <button class="btn btn-primary trigger-get-started" id="final-cta-btn">
+                Get started free <span class="btn-arrow">→</span>
+              </button>
+              <div class="cta-guarantee-note">
+                <span>⤴</span> 100% Free Forever • No credit card required
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Right -->
+          <div class="final-cta-visual">
+            <img src="assets/cta_clinic_patient.jpg?v=20261020_ind" alt="Calm Indian patient in sunlit modern clinic lounge" width="800" height="500" loading="eager">
+            <div class="cta-chalk-badge">
+              <div class="chalk-text-1">CALM CLINICS</div>
+              <div class="chalk-text-2">HAPPIER PATIENTS :)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       SITE FOOTER
+       ========================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top-grid">
+        <!-- Brand Column -->
+        <div class="footer-brand-col">
+          <a href="#" class="brand-logo" aria-label="Queue24 Home">
+            <span class="logo-symbol">
+              <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="14" cy="14" r="13" stroke="#1FA36E" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="70 12"/>
+                <circle cx="14" cy="14" r="5" fill="#1FA36E"/>
+                <path d="M14 6V14L19 19" stroke="#1FA36E" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span>Queue24</span>
+          </a>
+          <p class="footer-tagline">Virtual queues, Real experiences</p>
+          <div style="margin-top: 14px;">
+            <button class="nav-download-btn smart-download-btn" style="padding: 6px 14px; font-size: 0.78rem;">
+              <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+              <span>Download App</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Product Column -->
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul class="footer-links-list">
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#download-app">Download App</a></li>
+            <li><a href="#pricing" class="trigger-pricing">Pricing</a></li>
+            <li><a href="#industries">For businesses</a></li>
+          </ul>
+        </div>
+
+        <!-- Mobile Apps Column -->
+        <div class="footer-col">
+          <h5>Mobile Apps</h5>
+          <ul class="footer-links-list">
+            <li><a href="https://apps.apple.com/in/app/queue24-clinic-queue-app/id6813539619" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--primary-dark);"><svg width="13" height="13" viewBox="0 0 384 512" fill="currentColor" style="flex-shrink: 0;"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.9 69.5-34.3z"/></svg> iOS App Store</a></li>
+            <li><a href="https://play.google.com/store/apps/details?id=com.atzerocost.queue24" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--primary-dark);"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;"><path d="M3.609 1.814L13.793 12 3.61 22.186a2.023 2.023 0 0 1-.61-.918V2.732c.162-.36.375-.678.609-.918zm11.232 11.234l2.42 2.42-12.015 6.906 9.595-9.326zm2.42-2.096l2.973 1.708c1.022.587 1.022 1.545 0 2.132l-2.973 1.708-2.148-2.148 2.148-2.148v-1.12zm-2.42-.324L5.246 1.302l12.015 6.906-2.42 2.42z"/></svg> Google Play Store</a></li>
+            <li><a href="#download-app" class="trigger-download-app">Scan QR Code</a></li>
+            <li><span style="font-size: 0.74rem; color: var(--text-muted);">Queue24: Clinic Queue App</span></li>
+          </ul>
+        </div>
+
+        <!-- Support & Company Column -->
+        <div class="footer-col">
+          <h5>Support &amp; Contact</h5>
+          <ul class="footer-links-list">
+            <li><a href="tel:+917467073015" style="font-weight: 700; color: var(--primary-dark); display: inline-flex; align-items: center; gap: 5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> +91 74670 73015</a></li>
+            <li><a href="mailto:hello.queue24@gmail.com" style="font-weight: 700; color: var(--primary-dark); display: inline-flex; align-items: center; gap: 5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg> hello.queue24@gmail.com</a></li>
+            <li><a href="https://wa.me/918851057538" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 800;">💬 WhatsApp Support Chat</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="privacy-policy.html#contact">Terms &amp; Complaints</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-row">
+        <span>&copy; 2026 Queue24. All rights reserved.</span>
+
+        <!-- Official Social Links -->
+        <div class="social-links">
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon-link" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon-link" aria-label="X (Twitter)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon-link" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon-link" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       MODAL 1: GET STARTED / CLINIC ONBOARDING
+       ========================================================================== -->
+  <div class="modal-overlay" id="get-started-modal" role="dialog" aria-modal="true" aria-labelledby="get-started-title">
+    <div class="modal-card">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span>100% FREE CLINIC ACCOUNT</span>
+        </div>
+        <h3 class="modal-title" id="get-started-title">Launch your clinic queue in minutes</h3>
+        <p class="modal-subtitle">No hardware required. 100% Free Forever for your clinic.</p>
+      </div>
+
+      <form id="get-started-form">
+        <div class="form-group">
+          <label class="form-label" for="gs-biz-name">Clinic or Hospital Name</label>
+          <input type="text" id="gs-biz-name" name="businessName" class="form-input" placeholder="e.g. CarePoint Polyclinic" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="gs-category">Clinic Specialization</label>
+            <select id="gs-category" name="category" class="form-select">
+              <option value="general">General &amp; Family Practice</option>
+              <option value="dental">Dental &amp; Specialty Clinic</option>
+              <option value="diagnostic">Diagnostic &amp; Pathology Lab</option>
+              <option value="pediatric">Pediatric &amp; Maternity</option>
+              <option value="polyclinic">Multi-Doctor Polyclinic</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="gs-location">City or Location</label>
+            <input type="text" id="gs-location" name="location" class="form-input" placeholder="e.g. Bandra, Mumbai" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="gs-email">Doctor or Work Email</label>
+            <input type="email" id="gs-email" name="email" class="form-input" placeholder="doctor@clinic.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="gs-phone">WhatsApp or Phone</label>
+            <input type="tel" id="gs-phone" name="phone" class="form-input" placeholder="+91 98765 43210" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="gs-capacity">Estimated Daily Patients</label>
+          <select id="gs-capacity" name="capacity" class="form-select">
+            <option value="50">Up to 40 patients / day</option>
+            <option value="150" selected>40 – 120 patients / day</option>
+            <option value="300">120 – 300 patients / day</option>
+            <option value="500+">300+ hospital OPD rush</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Create Free Clinic Virtual Queue →
+        </button>
+        <p style="font-size: 0.72rem; color: #888; text-align: center; margin-top: 10px;">
+          Instant activation • 100% Free Forever • No credit card needed
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: LIVE PATIENT QUEUE SIMULATOR
+       ========================================================================== -->
+  <div class="modal-overlay" id="simulator-modal" role="dialog" aria-modal="true" aria-labelledby="sim-title">
+    <div class="modal-card" style="max-width: 480px;">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span>INTERACTIVE CLINIC DEMO</span>
+        </div>
+        <h3 class="modal-title" id="sim-title">Experience the patient journey</h3>
+        <p class="modal-subtitle">Test how patients join and receive real-time consultation alerts.</p>
+      </div>
+
+      <form id="sim-join-form">
+        <div class="form-group">
+          <label class="form-label" for="sim-input-name">Patient Name</label>
+          <input type="text" id="sim-input-name" class="form-input" placeholder="e.g. Priya Sharma" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="sim-input-party">Consultation Type</label>
+            <select id="sim-input-party" class="form-select">
+              <option value="1">General Consultation</option>
+              <option value="2" selected>Follow-up Visit</option>
+              <option value="3">Specialist Review</option>
+              <option value="4">Diagnostic Check</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sim-input-channel">Notify Me Via</label>
+            <select id="sim-input-channel" class="form-select">
+              <option value="whatsapp" selected>WhatsApp</option>
+              <option value="sms">SMS Text</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">
+          Generate Patient Token →
+        </button>
+      </form>
+
+      <div id="sim-result-card" style="display: none; margin-top: 16px; background: #FAF9F5; border: 1px solid var(--border-light); border-radius: 16px; padding: 22px; text-align: center;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Token Generated For <span id="sim-guest-name">You</span></div>
+        <div id="sim-token-number" style="font-size: 3.5rem; font-weight: 800; color: var(--primary); margin: 6px 0; line-height: 1;">#16</div>
+        <div style="font-size: 0.88rem; color: var(--text-muted);">Estimated wait: <strong id="sim-wait-time" style="color: var(--text-main);">~14 minutes</strong></div>
+
+        <div style="margin: 18px 0; padding: 12px; background: white; border: 1px solid var(--border-subtle); border-radius: 10px; text-align: left; font-size: 0.8rem;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span>💬</span> WhatsApp Live Dispatch
+          </div>
+          <div style="color: #444;">
+            "Hi! You're #16 at Metro Health Clinic. Dr. Rajesh Mehta's consultation in OPD Room 1 is underway. We will WhatsApp you when you are next in line. Feel free to relax comfortably!"
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn btn-outline" id="sim-send-alert-btn" style="flex: 1; font-size: 0.82rem;">Send Recall Alert 🔔</button>
+          <button type="button" class="btn btn-primary" id="sim-reset-btn" style="flex: 1; font-size: 0.82rem;">Reset Demo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: CLINIC WORKFLOW DETAIL
+       ========================================================================== -->
+  <div class="modal-overlay" id="industry-modal" role="dialog" aria-modal="true" aria-labelledby="ind-modal-title">
+    <div class="modal-card">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span class="industry-modal-tag">HEALTHCARE</span>
+        </div>
+        <h3 class="modal-title industry-modal-title" id="ind-modal-title">Specialized Clinical Workflows</h3>
+        <p class="modal-subtitle industry-modal-subtitle">Outpatient consultation queues without crowded waiting lounges</p>
+      </div>
+
+      <p class="industry-modal-desc" style="font-size: 0.94rem; color: #444; line-height: 1.6; margin-bottom: 20px;">
+        Allow patients and their families to wait comfortably nearby, retaining their exact place in line with zero physical crowding.
+      </p>
+
+      <h4 style="font-size: 0.88rem; font-weight: 700; margin-bottom: 10px; color: var(--text-main);">Operational Capabilities Included</h4>
+      <ul class="industry-features-list" style="padding-left: 20px; font-size: 0.88rem; color: #555; line-height: 1.7; margin-bottom: 24px;">
+        <li>Multi-doctor OPD consultation token queues</li>
+        <li>Emergency escalation and priority patient scheduling</li>
+        <li>Confidential token display with live wait estimates</li>
+      </ul>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-primary trigger-get-started" style="flex: 1;">Get Started Free →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 5: FEATURES & PLATFORM TOUR
+       ========================================================================== -->
+  <div class="modal-overlay" id="features-modal" role="dialog" aria-modal="true" aria-labelledby="feat-modal-title">
+    <div class="modal-card" style="max-width: 580px;">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span>CLINIC CAPABILITIES</span>
+        </div>
+        <h3 class="modal-title" id="feat-modal-title">Built for doctors, patients and receptionists</h3>
+        <p class="modal-subtitle">Tested, verified, and operational for modern medical clinics.</p>
+      </div>
+
+      <div style="display: grid; gap: 16px; margin-bottom: 24px;">
+        <div style="padding: 14px; background: #FAF9F5; border-radius: 12px; border: 1px solid var(--border-light);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;">Doctor &amp; Receptionist Real-Time Dashboard</h4>
+          <p style="font-size: 0.84rem; color: var(--text-muted);">Runs in any web browser on iOS, Android, Mac, or Windows. Call next patient, hold, or bump with single taps.</p>
+        </div>
+
+        <div style="padding: 14px; background: #FAF9F5; border-radius: 12px; border: 1px solid var(--border-light);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;">Automated WhatsApp and SMS Patient Dispatch</h4>
+          <p style="font-size: 0.84rem; color: var(--text-muted);">Patients receive their digital token and automated consultation alerts without shouting names in the lobby.</p>
+        </div>
+
+        <div style="padding: 14px; background: #FAF9F5; border-radius: 12px; border: 1px solid var(--border-light);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;">Printable Clinic QR Stand Generator</h4>
+          <p style="font-size: 0.84rem; color: var(--text-muted);">Download print-ready high-res reception stand QR graphics branded with your clinic name.</p>
+        </div>
+
+        <div style="padding: 14px; background: #FAF9F5; border-radius: 12px; border: 1px solid var(--border-light);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;">Consultation Turnaround &amp; Peak Rush Analytics</h4>
+          <p style="font-size: 0.84rem; color: var(--text-muted);">Track hourly patient arrivals, average doctor consultation time, and receptionist efficiency.</p>
+        </div>
+      </div>
+
+      <button class="btn btn-primary trigger-get-started" style="width: 100%;">Get Started with Clinic Queue →</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 6: PRICING MODAL & PLANS (100% FREE FOR ALL CLINICS)
+       ========================================================================== -->
+  <div class="modal-overlay" id="pricing-modal" role="dialog" aria-modal="true" aria-labelledby="pricing-modal-title">
+    <div class="modal-card" style="max-width: 620px;">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header" style="text-align: center;">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span>100% FREE FOREVER</span>
+        </div>
+        <h3 class="modal-title" id="pricing-modal-title">100% Free For All Clinics &amp; Doctors</h3>
+        <p class="modal-subtitle">No monthly fees. No hardware charges. No credit card required. Free forever.</p>
+      </div>
+
+      <div class="pricing-cards-grid">
+        <!-- Solo Practice Plan -->
+        <div style="border: 1px solid var(--border-light); border-radius: 16px; padding: 22px; background: #FAF9F5; display: flex; flex-direction: column;">
+          <h4 style="font-size: 1.1rem; font-weight: 700;">Solo Practice &amp; OPD</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Single doctor clinics and specialized consult rooms</p>
+          <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; color: var(--primary);">₹0<span style="font-size: 0.85rem; font-weight: 600; color: var(--primary-dark);"> / Free Forever</span></div>
+          <ul style="font-size: 0.8rem; color: #444; line-height: 1.8; list-style: none; margin-bottom: 20px; flex: 1;">
+            <li>✓ Active doctor OPD rooms</li>
+            <li>✓ Unlimited patient joins</li>
+            <li>✓ Web &amp; QR token check-in</li>
+            <li>✓ Automated SMS and WhatsApp</li>
+            <li>✓ Receptionist live tablet &amp; mobile view</li>
+          </ul>
+          <button class="btn btn-outline trigger-get-started" style="width: 100%;">Get Started Free →</button>
+        </div>
+
+        <!-- Polyclinic Plan -->
+        <div style="border: 2px solid var(--primary); border-radius: 16px; padding: 22px; background: #FFFFFF; display: flex; flex-direction: column; position: relative;">
+          <span style="position: absolute; top: -10px; right: 16px; background: var(--primary); color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 8px;">100% FREE</span>
+          <h4 style="font-size: 1.1rem; font-weight: 700;">Polyclinic &amp; Hospital</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Multi-doctor polyclinics and diagnostic centers</p>
+          <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; color: var(--primary);">₹0<span style="font-size: 0.85rem; font-weight: 600; color: var(--primary-dark);"> / Free Forever</span></div>
+          <ul style="font-size: 0.8rem; color: #444; line-height: 1.8; list-style: none; margin-bottom: 20px; flex: 1;">
+            <li>✓ Unlimited doctors &amp; OPD rooms</li>
+            <li>✓ Unlimited monthly patient joins</li>
+            <li>✓ Doctor &amp; receptionist role logins</li>
+            <li>✓ Custom branded clinic QR stands</li>
+            <li>✓ Peak rush analytics and export</li>
+            <li>✓ Dedicated WhatsApp business API</li>
+          </ul>
+          <button class="btn btn-primary trigger-get-started" style="width: 100%;">Get Started Free →</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; padding: 12px 16px; background: var(--primary-light); border-radius: 12px; text-align: center; font-size: 0.82rem; color: var(--primary-dark);">
+        Need clinic onboarding assistance? Call <a href="tel:+917467073015" style="color: var(--primary-dark); font-weight: 700; text-decoration: underline;">+91 74670 73015</a> or email <a href="mailto:hello.queue24@gmail.com" style="color: var(--primary-dark); font-weight: 700; text-decoration: underline;">hello.queue24@gmail.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 7: CONTACT MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+    <div class="modal-card" style="max-width: 490px;">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header">
+        <div class="section-eyebrow">
+          <span class="dot"></span>
+          <span>GET IN TOUCH</span>
+        </div>
+        <h3 class="modal-title" id="contact-modal-title">Speak with our healthcare solutions team</h3>
+        <p class="modal-subtitle">We reply promptly and provide live onboarding assistance.</p>
+      </div>
+
+      <!-- Quick Contact Cards -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+        <a href="tel:+917467073015" style="background: var(--primary-light); padding: 12px 14px; border-radius: 12px; text-decoration: none; border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-size: 0.68rem; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.05em;">Call</span>
+          <span style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);">+91 74670 73015</span>
+        </a>
+        <a href="mailto:hello.queue24@gmail.com" style="background: var(--primary-light); padding: 12px 14px; border-radius: 12px; text-decoration: none; border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-size: 0.68rem; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.05em;">Direct Email</span>
+          <span style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); word-break: break-all;">hello.queue24@gmail.com</span>
+        </a>
+      </div>
+
+      <form id="contact-form">
+        <div class="form-group">
+          <label class="form-label" for="contact-name">Your Name</label>
+          <input type="text" id="contact-name" name="senderName" class="form-input" placeholder="e.g. Dr. Rajesh Mehta" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contact-email">Email Address</label>
+          <input type="email" id="contact-email" name="senderEmail" class="form-input" placeholder="doctor@clinic.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contact-msg">Message</label>
+          <textarea id="contact-msg" name="message" class="form-textarea" rows="4" placeholder="Tell us about your clinic practice and queue setup needs..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: DOWNLOAD QUEUE24 APP
+       ========================================================================== -->
+  <div class="modal-overlay" id="download-app-modal" role="dialog" aria-modal="true" aria-labelledby="download-modal-title">
+    <div class="modal-card" style="max-width: 480px; text-align: center;">
+      <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div class="modal-header" style="text-align: center;">
+        <img src="assets/queue24_app_icon.png" alt="Queue24 App Icon" style="width: 64px; height: 64px; border-radius: 14px; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(11,94,65,0.2); display: block;">
+        <div class="section-eyebrow" style="justify-content: center;">
+          <span class="dot"></span>
+          <span>OFFICIAL MOBILE APP</span>
+        </div>
+        <h3 class="modal-title" id="download-modal-title" style="margin-top: 6px;">Get Queue24: Clinic Queue App</h3>
+        <p class="modal-subtitle">100% Free for Patients &amp; Clinics on iOS &amp; Android</p>
+      </div>
+
+      <div class="modal-download-box">
+        <a href="https://apps.apple.com/in/app/queue24-clinic-queue-app/id6813539619" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-apple" aria-label="Download Queue24 on App Store">
+          <span class="app-badge-icon">
+            <svg viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.9 69.5-34.3z"/></svg>
+          </span>
+          <span class="app-badge-text">
+            <span class="app-badge-sub">Download on the</span>
+            <span class="app-badge-title">Apple App Store</span>
+          </span>
+          <span class="app-badge-pill">★ 4.9 · iOS</span>
+        </a>
+
+        <a href="https://play.google.com/store/apps/details?id=com.atzerocost.queue24" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-google" aria-label="Get Queue24 on Google Play">
+          <span class="app-badge-icon">
+            <svg viewBox="0 0 512 512">
+              <path fill="#4285F4" d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z"/>
+              <path fill="#34A853" d="M47 38.6c-4.2 8.7-6.7 18.8-6.7 30.1v374.6c0 11.3 2.5 21.4 6.7 30.1l226.7-226.7L47 38.6z"/>
+              <path fill="#FBBC04" d="M385.4 337.8L104.6 499l220.7-221.3 60.1 60.1z"/>
+              <path fill="#EA4335" d="M451.8 284.4l-66.4-38.2-60.1-60.1 60.1-60.1 66.4-38.2c19.1-11 39.9-2.3 46.2 7.7V417c-6.3 10-27.1 18.7-46.2 7.7z"/>
+            </svg>
+          </span>
+          <span class="app-badge-text">
+            <span class="app-badge-sub">GET IT ON</span>
+            <span class="app-badge-title">Google Play Store</span>
+          </span>
+          <span class="app-badge-pill">★ 4.8 · Android</span>
+        </a>
+      </div>
+
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-light); font-size: 0.8rem; color: var(--text-muted);">
+        Or scan with your smartphone camera to download instantly:
+        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 12px;">
+          <div style="text-align: center;">
+            <div style="width: 110px; height: 110px; border-radius: 10px; border: 1px solid var(--border-light); padding: 5px; background: white; margin: 0 auto;">
+              <img src="assets/qr_app_store.svg" alt="iOS QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="font-size: 0.72rem; font-weight: 700; margin-top: 5px; color: var(--text-main);">Apple iOS</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 110px; height: 110px; border-radius: 10px; border: 1px solid var(--border-light); padding: 5px; background: white; margin: 0 auto;">
+              <img src="assets/qr_play_store.svg" alt="Android QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="font-size: 0.72rem; font-weight: 700; margin-top: 5px; color: var(--text-main);">Android</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Scripts -->
+  <script src="script.js?v=20261025_green_v10"></script>
+</body>
+</html>

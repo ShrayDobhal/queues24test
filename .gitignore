@@ -1,0 +1,9 @@
+# Never commit secrets
+*config.php
+.env*
+ADMIN-LOGIN.txt
+*.sqlite
+*.sqlite-*
+.DS_Store
+node_modules/
+.vercel

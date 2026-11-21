@@ -1,0 +1,9 @@
+# Vercel serves static files only; PHP parts are kept in the repo for reference but not deployed.
+*.php
+.htaccess
+_q24h/
+sales-crm/
+lab-partners/
+blood-test/api/
+blood-test/app.html
+tools/

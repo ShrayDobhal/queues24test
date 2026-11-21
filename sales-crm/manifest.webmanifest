@@ -1,0 +1,10 @@
+{
+  "name": "Queue24 Sales CRM",
+  "short_name": "Queue24 CRM",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#1a8f5f",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
