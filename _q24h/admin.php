@@ -131,11 +131,22 @@ function admin_routes(string $method, string $path, int $adminId, string $adminN
     }
     if (route_match_a($method, $path, 'POST', '/partners') !== null) {
         $f = partner_fields($b(), false);
-        $pw = generate_password();
-        $code = strtoupper(substr(preg_replace('/[^A-Z]/i', '', $f['city'] ?: 'LAB'), 0, 3)) . '-' . random_int(100, 999);
-        $id = run('INSERT INTO partners (code, name, contact_person, email, phone, city, state, address, password_hash, password_enc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$code, $f['name'], $f['contact_person'], $f['email'], $f['phone'], $f['city'], $f['state'], $f['address'], hash_pw($pw), enc_pw($pw)]);
+        $code = partner_code_in($b()['code'] ?? '', 0) ?? (strtoupper(substr(preg_replace('/[^A-Z]/i', '', $f['city'] ?: 'LAB'), 0, 3)) . '-' . random_int(100, 999));
+        $pw = partner_password_in($b()['password'] ?? '') ?? generate_password();
+        $areas = partner_areas_in($b()['areas'] ?? null);
+        $id = tx(function () use ($f, $code, $pw, $areas) {
+            $id = run('INSERT INTO partners (code, name, contact_person, email, phone, city, state, address, password_hash, password_enc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [$code, $f['name'], $f['contact_person'], $f['email'], $f['phone'], $f['city'], $f['state'], $f['address'], hash_pw($pw), enc_pw($pw)]);
+            if ($areas !== null) set_partner_areas($id, $areas);
+            return $id;
+        });
         json_out(['partner' => partner_admin_json(q1('SELECT * FROM partners WHERE id = ?', [$id])), 'password' => $pw], 201);
+        return;
+    }
+    if (route_match_a($method, $path, 'POST', '/partners/deactivate-starters') !== null) {
+        // the 51 placeholder labs created at install (emails @partners.queue24.com) — real labs are added by the admin
+        $n = affected("UPDATE partners SET active = 0, token_version = token_version + 1 WHERE active = 1 AND email LIKE '%@partners.queue24.com'");
+        json_out(['deactivated' => $n]);
         return;
     }
     if ($m = route_match_a($method, $path, 'PATCH', '/partners/(\d+)')) {
@@ -144,6 +155,10 @@ function admin_routes(string $method, string $path, int $adminId, string $adminN
         $f = partner_fields(['__self' => (int) $p['id']] + $b(), true);
         $sets = []; $args = [];
         foreach ($f as $k => $v) { $sets[] = "$k = ?"; $args[] = $v; }
+        if (array_key_exists('code', $b()) && ($code = partner_code_in($b()['code'], (int) $p['id'])) !== null && $code !== $p['code']) { $sets[] = 'code = ?'; $args[] = $code; }
+        if (($pw = partner_password_in($b()['password'] ?? '')) !== null) { $sets[] = 'password_hash = ?'; $args[] = hash_pw($pw); $sets[] = 'password_enc = ?'; $args[] = enc_pw($pw); $sets[] = 'token_version = token_version + 1'; }
+        $areas = partner_areas_in($b()['areas'] ?? null);
+        if ($areas !== null) set_partner_areas((int) $p['id'], $areas);
         if (is_bool($b()['active'] ?? null)) { $sets[] = 'active = ?'; $args[] = $b()['active'] ? 1 : 0; if (!$b()['active']) $sets[] = 'token_version = token_version + 1'; }
         if ($sets) { $args[] = (int) $p['id']; run('UPDATE partners SET ' . implode(', ', $sets) . ' WHERE id = ?', $args); }
         json_out(['partner' => partner_admin_json(q1('SELECT * FROM partners WHERE id = ?', [(int) $p['id']]))]);
@@ -228,6 +243,50 @@ function partner_fields(array $b, bool $partial): array
     if ($has('state')) $out['state'] = str_in($b['state'] ?? '', 60) ?: null;
     if ($has('address')) $out['address'] = str_in($b['address'] ?? '', 300) ?: null;
     return $out;
+}
+
+/** Lab code chosen by the admin (login ID together with the email). null = not given. */
+function partner_code_in($v, int $selfId): ?string
+{
+    $code = strtoupper(trim((string) $v));
+    if ($code === '') return null;
+    if (!preg_match('/^[A-Z0-9][A-Z0-9_-]{2,19}$/', $code)) throw bad('Lab code: 3-20 letters, numbers or dashes (e.g. LKO-CITY1).');
+    if (q1('SELECT id FROM partners WHERE code = ? COLLATE NOCASE AND id <> ?', [$code, $selfId])) throw bad('Another lab already uses this lab code.');
+    return $code;
+}
+/** Password set by the admin. null = not given (keep / generate). */
+function partner_password_in($v): ?string
+{
+    $pw = (string) $v;
+    if ($pw === '') return null;
+    if (strlen($pw) < 8) throw bad('The lab password must be at least 8 characters.');
+    if (strlen($pw) > 72) throw bad('The lab password is too long.');
+    return $pw;
+}
+/** Areas this lab serves: [{areaId, role: primary|backup}]. null = leave unchanged. */
+function partner_areas_in($v): ?array
+{
+    if (!is_array($v)) return null;
+    $out = [];
+    foreach ($v as $a) {
+        $areaId = (int) ($a['areaId'] ?? 0); $role = ($a['role'] ?? '') === 'backup' ? 'backup' : 'primary';
+        if (!$areaId) continue;
+        if (!q1('SELECT 1 FROM areas WHERE id = ?', [$areaId])) throw bad('One of the selected areas no longer exists.');
+        if (isset($out[$areaId])) throw bad('Each area can be added only once for a lab (primary or backup).');
+        $out[$areaId] = $role;
+    }
+    return $out;
+}
+/** Replace this lab's coverage. Taking a slot (area + role) moves it from the lab that had it. */
+function set_partner_areas(int $partnerId, array $areas): void
+{
+    tx(function () use ($partnerId, $areas) {
+        run('DELETE FROM coverage WHERE partner_id = ?', [$partnerId]);
+        foreach ($areas as $areaId => $role) {
+            run('DELETE FROM coverage WHERE area_id = ? AND role = ?', [$areaId, $role]);
+            run('INSERT INTO coverage (area_id, role, partner_id) VALUES (?, ?, ?)', [$areaId, $role, $partnerId]);
+        }
+    });
 }
 
 function route_match_a(string $method, string $path, string $verb, string $pattern): ?array

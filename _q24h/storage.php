@@ -53,6 +53,9 @@ function uploaded(string $field = 'files'): array
 function validate_uploads(array $files, int $maxFiles = 5): array
 {
     $maxMb = (int) cfg('max_upload_mb', 10);
+    $ini = trim((string) ini_get('upload_max_filesize')); $u = strtolower(substr($ini, -1)); $n = (int) $ini;
+    $iniMb = (int) floor(($u === 'g' ? $n * 1024 : ($u === 'm' ? $n : ($u === 'k' ? $n / 1024 : $n / 1048576))));
+    if ($iniMb > 0 && $iniMb < $maxMb) $maxMb = $iniMb; // tell people the real limit of this server
     if (count($files) > $maxFiles) throw bad("You can attach up to $maxFiles files at a time.");
     $out = [];
     foreach ($files as $f) {

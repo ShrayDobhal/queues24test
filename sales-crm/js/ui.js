@@ -331,13 +331,13 @@ function VisitCardInner({ visit, showEmployee, compact }) {
   </article>`;
 }
 
-export function PasswordReveal({ email, password, name, hideNote }) {
+export function PasswordReveal({ email, password, name, hideNote, title = 'Queue24 Sales CRM login', url, note }) {
   const [copied, setCopied] = useState(false);
-  const text = `Queue24 Sales CRM login\nName: ${name}\nLogin ID: ${email}\nPassword: ${password}\nOpen: ${location.origin}${location.pathname}`;
+  const text = `${title}\nName: ${name}\nLogin ID: ${email}\nPassword: ${password}\nOpen: ${url || location.origin + location.pathname}`;
   return html`<div class="pw-reveal">
     <div class="pw-row"><span>Login ID</span><b>${email}</b></div>
     <div class="pw-row"><span>Password</span><code>${password}</code></div>
-    ${!hideNote && html`<p class="pw-note"><${Icon} name="shield" size=${14} />Share this with the employee. You can see it again anytime from Employees (key icon) or their Account tab.</p>`}
+    ${!hideNote && html`<p class="pw-note"><${Icon} name="shield" size=${14} />${note || 'Share this with the employee. You can see it again anytime from Employees (key icon) or their Account tab.'}</p>`}
     <${Button} variant="secondary" icon=${copied ? 'check' : 'copy'} onClick=${async () => { await copyText(text); setCopied(true); }}>
       ${copied ? 'Copied login details' : 'Copy login details'}
     </${Button}>

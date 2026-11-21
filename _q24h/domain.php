@@ -80,6 +80,17 @@ function validate_location(array $b): array
     $area = resolve_area($state, $city);
     return ['state' => $state, 'city' => $city, 'area' => $area];
 }
+/** Optional GPS point from the patient's phone: [lat, lng, accuracy] or nulls. Silently ignored if invalid. */
+function geo_in(array $b): array
+{
+    $g = is_array($b['geo'] ?? null) ? $b['geo'] : [];
+    $lat = is_numeric($g['lat'] ?? null) ? (float) $g['lat'] : null;
+    $lng = is_numeric($g['lng'] ?? null) ? (float) $g['lng'] : null;
+    // India bounding box (with margin); anything else is a wrong reading
+    if ($lat === null || $lng === null || $lat < 5 || $lat > 38 || $lng < 66 || $lng > 99) return [null, null, null];
+    $acc = is_numeric($g['accuracy'] ?? null) ? max(0, min(100000, (int) $g['accuracy'])) : null;
+    return [round($lat, 6), round($lng, 6), $acc];
+}
 function validate_booking(array $b, array $patient): array
 {
     $pincode = str_in($b['pincode'] ?? '', 6);
@@ -198,10 +209,11 @@ function create_tests_order(array $patient, array $b): int
     $total = array_sum(array_column($tests, 'price'));
     return tx(function () use ($patient, $b, $ref, $loc, $bk, $tests, $mrp, $total) {
         if ($id = existing_by_ref((int) $patient['id'], $ref)) return $id;
-        $id = run('INSERT INTO orders (patient_id, kind, status, area_id, city, state, pincode, address, member_name, member_age, member_gender, contact_phone, slot_date, slot_window, subtotal, discount, total, client_ref, note)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [$glat, $glng, $gacc] = geo_in($b);
+        $id = run('INSERT INTO orders (patient_id, kind, status, area_id, city, state, pincode, address, member_name, member_age, member_gender, contact_phone, slot_date, slot_window, subtotal, discount, total, client_ref, note, geo_lat, geo_lng, geo_accuracy)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [(int) $patient['id'], 'tests', 'placed', (int) $loc['area']['id'], $loc['city'], $loc['state'], $bk['pincode'], $bk['address'], $bk['member_name'], $bk['member_age'], $bk['member_gender'],
-                $bk['contact_phone'], $bk['slot_date'], $bk['slot_window'], $mrp, $mrp - $total, $total, $ref, str_in($b['note'] ?? '', 500) ?: null]);
+                $bk['contact_phone'], $bk['slot_date'], $bk['slot_window'], $mrp, $mrp - $total, $total, $ref, str_in($b['note'] ?? '', 500) ?: null, $glat, $glng, $gacc]);
         $ins = db()->prepare('INSERT INTO order_items (order_id, test_id, name, price, mrp) VALUES (?, ?, ?, ?, ?)');
         foreach ($tests as $t) $ins->execute([$id, (int) $t['id'], $t['name'], (int) $t['price'], (int) $t['mrp']]);
         $no = set_order_no($id, 'tests');
@@ -220,10 +232,11 @@ function create_rx_order(array $patient, array $b, array $checkedFiles): int
     $loc = validate_location($b);
     if (!$checkedFiles) throw bad('Attach a photo or PDF of your prescription.');
     $note = str_in($b['note'] ?? '', 1000);
-    $id = tx(function () use ($patient, $ref, $loc, $note) {
+    [$glat, $glng, $gacc] = geo_in(['geo' => ['lat' => $b['lat'] ?? null, 'lng' => $b['lng'] ?? null, 'accuracy' => $b['accuracy'] ?? null]]);
+    $id = tx(function () use ($patient, $ref, $loc, $note, $glat, $glng, $gacc) {
         if ($id = existing_by_ref((int) $patient['id'], $ref)) return -$id; // negative = already existed
-        $id = run('INSERT INTO orders (patient_id, kind, status, area_id, city, state, member_name, contact_phone, client_ref, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [(int) $patient['id'], 'prescription', 'placed', (int) $loc['area']['id'], $loc['city'], $loc['state'], $patient['name'], $patient['phone'], $ref, $note ?: null]);
+        $id = run('INSERT INTO orders (patient_id, kind, status, area_id, city, state, member_name, contact_phone, client_ref, note, geo_lat, geo_lng, geo_accuracy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [(int) $patient['id'], 'prescription', 'placed', (int) $loc['area']['id'], $loc['city'], $loc['state'], $patient['name'], $patient['phone'], $ref, $note ?: null, $glat, $glng, $gacc]);
         set_order_no($id, 'prescription');
         return $id;
     });
@@ -309,12 +322,13 @@ function partner_quote(array $p, int $id, array $testIds, string $note): void
 function patient_confirm(array $pt, int $id, array $b): void
 {
     $bk = validate_booking($b, $pt);
-    tx(function () use ($pt, $id, $bk) {
+    [$glat, $glng, $gacc] = geo_in($b);
+    tx(function () use ($pt, $id, $bk, $glat, $glng, $gacc) {
         $o = load_order($id);
         assert_access($o, 'patient', (int) $pt['id']);
         if ($o['status'] !== 'quoted') throw bad('There is no suggested test list to confirm right now.');
-        if (affected("UPDATE orders SET pincode = ?, address = ?, member_name = ?, member_age = ?, member_gender = ?, contact_phone = ?, slot_date = ?, slot_window = ?, status = 'scheduled', updated_at = ? WHERE id = ? AND status = 'quoted'",
-            [$bk['pincode'], $bk['address'], $bk['member_name'], $bk['member_age'], $bk['member_gender'], $bk['contact_phone'], $bk['slot_date'], $bk['slot_window'], now_iso(), $id]) !== 1) throw bad('Please refresh and try again.');
+        if (affected("UPDATE orders SET pincode = ?, address = ?, member_name = ?, member_age = ?, member_gender = ?, contact_phone = ?, slot_date = ?, slot_window = ?, geo_lat = COALESCE(?, geo_lat), geo_lng = COALESCE(?, geo_lng), geo_accuracy = COALESCE(?, geo_accuracy), status = 'scheduled', updated_at = ? WHERE id = ? AND status = 'quoted'",
+            [$bk['pincode'], $bk['address'], $bk['member_name'], $bk['member_age'], $bk['member_gender'], $bk['contact_phone'], $bk['slot_date'], $bk['slot_window'], $glat, $glng, $gacc, now_iso(), $id]) !== 1) throw bad('Please refresh and try again.');
         add_event($id, 'patient', (int) $pt['id'], 'confirmed', 'quoted', 'scheduled', '₹' . $o['total']);
         system_msg($id, 'Booking confirmed. Sample collection on ' . date('D, j M', strtotime($bk['slot_date'])) . ', ' . SLOT_WINDOWS[$bk['slot_window']] . '.');
     });
@@ -471,6 +485,7 @@ function order_detail(array $o, string $scope, int $viewerId): array
     $id = (int) $o['id'];
     $hidePrivate = $scope === 'partner' && $o['status'] === 'assigned';
     $s['address'] = $hidePrivate ? null : $o['address'];
+    $s['geo'] = (!$hidePrivate && $o['geo_lat'] !== null) ? ['lat' => (float) $o['geo_lat'], 'lng' => (float) $o['geo_lng'], 'accuracy' => $o['geo_accuracy'] !== null ? (int) $o['geo_accuracy'] : null] : null;
     $s['note'] = $o['note'];
     $s['cancelReason'] = $o['cancel_reason'];
     $s['discount'] = (int) $o['discount'];

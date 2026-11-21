@@ -160,3 +160,13 @@
 
 .odetail .kv-inline { gap: 14px; }
 .odetail .kv-inline b { text-align: right; }
+
+/* GPS location */
+.gps-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--brand); background: var(--brand-soft); color: var(--brand-ink); font: 700 14.5px var(--font); cursor: pointer; }
+.gps-btn:hover:not(:disabled) { background: #d4ecdf; }
+.gps-btn:disabled { opacity: .75; cursor: progress; }
+.gps-btn.small { width: auto; padding: 8px 12px; font-size: 13px; border-width: 1px; border-radius: 999px; justify-content: flex-start; }
+.or-line { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 12.5px; }
+.or-line::before, .or-line::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.geo-attach { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: -4px; }
+.geo-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--brand-ink); font-size: 13px; font-weight: 600; }

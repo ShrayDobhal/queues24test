@@ -57,15 +57,8 @@ function partner_routes(string $method, string $path): void
     $p = require_partner();
     $me = (int) $p['id'];
 
-    if (route_match($method, $path, 'POST', '/auth/change-password') !== null) {
-        if (!password_verify((string) ($b()['current'] ?? ''), $p['password_hash'])) throw bad('Your current password is incorrect.');
-        $next = (string) ($b()['next'] ?? '');
-        if (strlen($next) < 8) throw bad('New password must be at least 8 characters.');
-        run('UPDATE partners SET password_hash = ?, password_enc = ?, token_version = token_version + 1 WHERE id = ?', [hash_pw($next), enc_pw($next), $me]);
-        issue_session('partner', $me, (int) $p['token_version'] + 1);
-        json_out(['ok' => true]);
-        return;
-    }
+    // Login details (lab code, email, password) are managed only by the Queue24 admin.
+    if (route_match($method, $path, 'POST', '/auth/change-password') !== null) throw new HttpError(403, 'Your login is managed by Queue24. Please contact Queue24 to change it.');
     if (route_match($method, $path, 'GET', '/dashboard') !== null) {
         $counts = [];
         foreach (PARTNER_BUCKETS as $k => $where) $counts[$k] = (int) q1("SELECT COUNT(*) AS n FROM orders WHERE partner_id = ? AND $where", [$me])['n'];

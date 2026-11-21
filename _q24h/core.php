@@ -18,6 +18,8 @@ use Throwable;
 if (!defined('Q24H_ROOT')) define('Q24H_ROOT', __DIR__);
 
 $GLOBALS['Q24H_CFG'] = is_file(__DIR__ . '/config.php') ? require __DIR__ . '/config.php' : [];
+// local testing only: keep test files in their own Bunny folder, never next to live files
+if (getenv('Q24H_BUNNY_PREFIX')) $GLOBALS['Q24H_CFG']['bunny_path_prefix'] = (string) getenv('Q24H_BUNNY_PREFIX');
 
 function cfg(string $key, $default = null)
 {

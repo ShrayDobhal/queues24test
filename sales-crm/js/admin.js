@@ -248,7 +248,8 @@ function PasswordModal({ account, onClose, onChange, base = '/admin/employees' }
     footer=${html`<${Button} variant="ghost" icon="refresh" onClick=${regenerate}>New password</${Button}><${Button} onClick=${onClose}>Done</${Button}>`}>
     ${state.loading ? html`<${Loading} label="Fetching password…" />`
       : state.error ? html`<${ErrorBox} message=${state.error} onRetry=${load} />`
-      : state.available ? html`<${PasswordReveal} name=${account.name} email=${state.email || account.email} password=${state.password} hideNote />`
+      : state.available ? html`<${PasswordReveal} name=${account.name} email=${base.endsWith('/partners') ? `${account.code} or ${state.email || account.email}` : (state.email || account.email)} password=${state.password} hideNote
+          ...${base.endsWith('/partners') ? { title: 'Queue24 Lab Partner login', url: `${location.origin}/lab-partners/` } : {}} />`
       : html`<div class="notice notice-amber"><${Icon} name="key" size=${20} /><div><b>Password not available</b><span>${state.message}</span></div></div>`}
   </${Modal}>`;
 }
@@ -876,6 +877,7 @@ function LabOrderModal({ id, onClose }) {
         <div class="kv-inline"><span>Contact</span><b>${o.phone}</b></div>
         ${o.slotDate && html`<div class="kv-inline"><span>Collection</span><b>${fmtDay(o.slotDate)}, ${o.slotLabel}</b></div>`}
         ${o.address && html`<div class="kv-inline"><span>Address</span><b>${o.address}, ${o.city} ${o.pincode || ''}</b></div>`}
+        ${o.geo && html`<div class="kv-inline"><span>GPS pin</span><b><a class="link" target="_blank" rel="noopener" href=${`https://www.google.com/maps/search/?api=1&query=${o.geo.lat},${o.geo.lng}`}>Open in Maps</a>${o.geo.accuracy ? ` ±${o.geo.accuracy} m` : ''}</b></div>`}
         ${o.note && html`<div class="kv-inline"><span>Note</span><b>${o.note}</b></div>`}
         ${o.lines.length > 0 && html`<div class="lines">${o.lines.map((l) => html`<div class="kv-inline"><span>${l.name}</span><b>₹${l.price}</b></div>`)}<div class="kv-inline"><span><b>Total</b></span><b>₹${o.total}</b></div></div>`}
         ${(o.prescriptions.length > 0 || o.reports.length > 0) && html`<div class="msg-files">${[...o.prescriptions, ...o.reports].map((f) => html`<${FileChip} file=${f} key=${f.id} />`)}</div>`}
@@ -900,6 +902,11 @@ function LabPartnerList() {
   if (loading && !data) return html`<${Loading} />`;
   if (error && !data) return html`<${ErrorBox} message=${error} onRetry=${reload} />`;
   const items = data.items.filter((p) => !q || `${p.name} ${p.city} ${p.state} ${p.code} ${p.email}`.toLowerCase().includes(q.toLowerCase()));
+  const starters = data.items.filter((x) => x.active && /@partners\.queue24\.com$/.test(x.email)).length;
+  async function offStarters() {
+    if (!(await confirmDialog({ title: `Deactivate ${plural(starters, 'starter lab')}?`, message: 'Only the placeholder labs created at install are switched off. Your own labs stay active. You can turn any of them on again later.', confirmText: 'Deactivate starters', danger: true }))) return;
+    try { const r = await api(`${H}/partners/deactivate-starters`, { method: 'POST', body: {} }); toast(`${plural(r.deactivated, 'starter lab')} deactivated.`); reload(true); } catch (e) { toast(e.message, 'error'); }
+  }
   async function toggle(p) {
     if (p.active && !(await confirmDialog({ title: `Deactivate ${p.name}?`, message: 'They will be signed out and get no new orders. Areas where they are primary will route to the backup lab.', confirmText: 'Deactivate', danger: true }))) return;
     try { await api(`${H}/partners/${p.id}`, { method: 'PATCH', body: { active: !p.active } }); toast(p.active ? 'Lab deactivated.' : 'Lab activated.'); reload(true); } catch (e) { toast(e.message, 'error'); }
@@ -907,7 +914,10 @@ function LabPartnerList() {
   return html`<div class="stack">
     <div class="toolbar"><div class="search"><${Icon} name="search" size=${17} /><input placeholder="Search lab, city, state, code…" value=${q} onInput=${(e) => setQ(e.target.value)} /></div>
       <${Button} icon="plus" onClick=${() => setEdit({})}>Add lab partner</${Button}></div>
-    <p class="muted">${plural(data.items.length, 'lab')} · metros have a primary and a backup lab, other states one lab. Partner names are placeholders: rename them to the real labs.</p>
+    ${starters > 0 && html`<div class="notice notice-amber"><${Icon} name="alert" size=${18} /><div><b>${plural(starters, 'starter lab')} still active</b>
+      <span>These placeholder labs (emails @partners.queue24.com) were created at install so every area has a lab. Add your real labs with their areas, then switch the starters off. Areas with no active lab show orders under "Needs attention" for you to assign.</span></div>
+      <${Button} size="sm" variant="secondary" onClick=${offStarters}>Deactivate starters</${Button}></div>`}
+    <p class="muted">${plural(data.items.filter((x) => x.active).length, 'active lab')} · each area has a primary lab and optionally a backup.</p>
     <div class="partner-grid">${items.map((p) => html`<${HoverCard} key=${p.id} tip=${html`<${TipRows} title=${p.name} rows=${[['Login ID', p.email], ['Lab code', p.code], ['Contact', [p.contactPerson, p.phone].filter(Boolean).join(' · ') || '—'], ['Open orders', p.stats.open], ['Completed', p.stats.completed], ['Accepted / rejected / missed', `${p.stats.accepted} / ${p.stats.rejected} / ${p.stats.expired}`], ['Last login', p.lastLoginAt ? timeAgo(p.lastLoginAt) : 'never']]} />`}>
       <div class=${'partner-card' + (p.active ? '' : ' dim')}>
         <div class="partner-top"><b>${p.name}</b>${!p.active && html`<${Badge} tone="gray">Inactive</${Badge}>`}</div>
@@ -922,29 +932,59 @@ function LabPartnerList() {
       </div></${HoverCard}>`)}</div>
     ${pwFor && html`<${PasswordModal} account=${pwFor} base=${`${H}/partners`} onClose=${() => setPwFor(null)} onChange=${() => reload(true)} />`}
     ${edit && html`<${PartnerEditModal} p=${edit} onClose=${() => setEdit(null)} onSaved=${(r) => { setEdit(null); reload(true); if (r.password) setCreated(r); }} />`}
-    <${Modal} open=${Boolean(created)} title="Lab partner added" subtitle="Share these login details with the lab." onClose=${() => setCreated(null)} footer=${html`<${Button} onClick=${() => setCreated(null)}>Done</${Button}>`}>
-      ${created && html`<${PasswordReveal} name=${created.partner.name} email=${created.partner.email} password=${created.password} />`}
+    <${Modal} open=${Boolean(created)} title="Lab login details" subtitle="Share these with the lab: sign in at queue24.com/lab-partners." onClose=${() => setCreated(null)} footer=${html`<${Button} onClick=${() => setCreated(null)}>Done</${Button}>`}>
+      ${created && html`<${PasswordReveal} name=${created.partner.name} email=${`${created.partner.code} or ${created.partner.email}`} password=${created.password}
+        title="Queue24 Lab Partner login" url=${`${location.origin}/lab-partners/`} note="Share this with the lab. You can see it again anytime: Lab partners → Partners → key icon." />`}
     </${Modal}>
   </div>`;
 }
 
 function PartnerEditModal({ p, onClose, onSaved }) {
   const isNew = !p.id;
-  const [f, setF] = useState({ name: p.name || '', email: p.email || '', phone: p.phone || '', contactPerson: p.contactPerson || '', city: p.city || '', state: p.state || '', address: p.address || '' });
+  const areas = useApi(`${H}/areas`);
+  const [f, setF] = useState({ name: p.name || '', code: p.code || '', email: p.email || '', password: '', phone: p.phone || '', contactPerson: p.contactPerson || '', city: p.city || '', state: p.state || '', address: p.address || '' });
+  const [cov, setCov] = useState(() => (p.coverage || []).map((c) => ({ areaId: String(c.areaId), role: c.role })));
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => { const v = e.target.value; setF((p) => ({ ...p, [k]: v })); };
+  const set = (k) => (e) => { const v = e.target.value; setF((x) => ({ ...x, [k]: v })); };
+  const setRow = (i, k, v) => setCov((rows) => rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+  const taken = (areaId, role) => { const a = areas.data && areas.data.items.find((x) => String(x.id) === String(areaId)); const cur = a && a[role]; return cur && cur.id !== p.id ? cur.name : null; };
   async function save() {
+    if (isNew && f.password && f.password.length < 8) return toast('The password must be at least 8 characters.', 'error');
+    const rows = cov.filter((r) => r.areaId);
+    if (new Set(rows.map((r) => r.areaId)).size !== rows.length) return toast('Each area can be added only once.', 'error');
     setBusy(true);
-    try { const r = await api(isNew ? `${H}/partners` : `${H}/partners/${p.id}`, { method: isNew ? 'POST' : 'PATCH', body: f }); toast(isNew ? 'Lab added.' : 'Saved.'); onSaved(r); }
-    catch (e) { toast(e.message, 'error'); setBusy(false); }
+    const body = { ...f, areas: rows.map((r) => ({ areaId: Number(r.areaId), role: r.role })) };
+    if (!body.password) delete body.password;
+    try {
+      const r = await api(isNew ? `${H}/partners` : `${H}/partners/${p.id}`, { method: isNew ? 'POST' : 'PATCH', body });
+      toast(isNew ? 'Lab added.' : f.password ? 'Saved. The lab must sign in again with the new password.' : 'Saved.');
+      onSaved(isNew ? r : { ...r, password: f.password || undefined });
+    } catch (e) { toast(e.message, 'error'); setBusy(false); }
   }
-  return html`<${Modal} open title=${isNew ? 'Add lab partner' : `Edit ${p.name}`} subtitle=${isNew ? 'A login is created with a generated password. Assign areas in Coverage.' : 'The email is the lab\'s login ID.'} onClose=${onClose}
+  return html`<${Modal} open size="lg" title=${isNew ? 'Add lab partner' : `Edit ${p.name}`} subtitle="The lab signs in at /lab-partners with its lab code (or email) and this password. Only you can change them." onClose=${onClose}
     footer=${html`<${Button} variant="ghost" onClick=${onClose}>Cancel</${Button}><${Button} loading=${busy} onClick=${save}>${isNew ? 'Create lab' : 'Save'}</${Button}>`}>
     <div class="form-grid">
-      <${Field} label="Lab name"><input value=${f.name} onInput=${set('name')} placeholder="e.g. City Diagnostics, Lucknow" /></${Field}>
-      <div class="form-row"><${Field} label="Email (login ID)"><input type="email" value=${f.email} onInput=${set('email')} /></${Field}><${Field} label="Mobile"><input type="tel" value=${f.phone} onInput=${set('phone')} /></${Field}></div>
-      <div class="form-row"><${Field} label="Contact person"><input value=${f.contactPerson} onInput=${set('contactPerson')} /></${Field}><${Field} label="City"><input value=${f.city} onInput=${set('city')} /></${Field}></div>
-      <div class="form-row"><${Field} label="State"><input value=${f.state} onInput=${set('state')} /></${Field}><${Field} label="Address" optional><input value=${f.address} onInput=${set('address')} /></${Field}></div>
+      <div class="form-row"><${Field} label="Lab name"><input value=${f.name} onInput=${set('name')} placeholder="e.g. City Diagnostics" /></${Field}>
+        <${Field} label="Lab code" hint="Login ID, e.g. LKO-CITY1"><input value=${f.code} onInput=${(e) => { const v = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''); setF((x) => ({ ...x, code: v })); }} placeholder=${isNew ? 'Leave empty to auto-create' : ''} maxlength="20" autocomplete="off" /></${Field}></div>
+      <div class="form-row"><${Field} label="Email" hint="Also works as login ID"><input type="email" value=${f.email} onInput=${set('email')} autocomplete="off" /></${Field}>
+        <${Field} label=${isNew ? 'Password' : 'New password'} hint=${isNew ? 'Min 8 characters. Empty = generate one' : 'Leave empty to keep the current one'}>
+          <div class="pw-input"><input type=${showPw ? 'text' : 'password'} value=${f.password} onInput=${set('password')} autocomplete="new-password" minlength="8" />
+          <button type="button" class="link" onClick=${() => setShowPw(!showPw)}>${showPw ? 'Hide' : 'Show'}</button></div></${Field}></div>
+      <div class="form-row"><${Field} label="Contact person"><input value=${f.contactPerson} onInput=${set('contactPerson')} /></${Field}><${Field} label="Mobile"><input type="tel" value=${f.phone} onInput=${set('phone')} /></${Field}></div>
+      <div class="form-row"><${Field} label="City"><input value=${f.city} onInput=${set('city')} /></${Field}><${Field} label="State"><input value=${f.state} onInput=${set('state')} /></${Field}></div>
+      <${Field} label="Lab address" optional><input value=${f.address} onInput=${set('address')} /></${Field}>
+      <${Field} label="Areas this lab serves" hint="New orders from an area go to its primary lab first, then to the backup.">
+        <div class="cov-rows">
+          ${!areas.data ? html`<${Loading} />` : cov.map((r, i) => html`<div class="cov-row" key=${i}>
+            <select value=${r.areaId} onChange=${(e) => setRow(i, 'areaId', e.target.value)}><option value="">Select area</option>
+              ${areas.data.items.map((a) => html`<option value=${a.id}>${a.kind === 'metro' ? `${a.name} (${a.cities.slice(0, 3).join(', ')}…)` : `${a.name} (rest of state)`}</option>`)}</select>
+            <select value=${r.role} onChange=${(e) => setRow(i, 'role', e.target.value)}><option value="primary">Primary</option><option value="backup">Backup</option></select>
+            <button type="button" class="icon-btn" aria-label="Remove area" onClick=${() => setCov((rows) => rows.filter((_, j) => j !== i))}><${Icon} name="x" size=${15} /></button>
+            ${r.areaId && taken(r.areaId, r.role) && html`<div class="muted small cov-note">Replaces ${taken(r.areaId, r.role)} as ${r.role}</div>`}
+          </div>`)}
+          <button type="button" class="link" onClick=${() => setCov((rows) => [...rows, { areaId: '', role: 'primary' }])}><${Icon} name="plus" size=${15} />Add area</button>
+        </div></${Field}>
     </div>
   </${Modal}>`;
 }

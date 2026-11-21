@@ -9,7 +9,7 @@ namespace Q24H;
 
 use PDO;
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 function migrate(PDO $pdo): void
 {
@@ -211,6 +211,12 @@ CREATE TABLE rate_limits (key TEXT PRIMARY KEY, window_start INTEGER NOT NULL, c
 SQL);
             require_once __DIR__ . '/seed.php';
             seed_all($pdo);
+        }
+        if ($v < 2) {
+            // v2: exact GPS spot of the patient (optional) so the collection team can navigate there
+            $pdo->exec('ALTER TABLE orders ADD COLUMN geo_lat REAL');
+            $pdo->exec('ALTER TABLE orders ADD COLUMN geo_lng REAL');
+            $pdo->exec('ALTER TABLE orders ADD COLUMN geo_accuracy INTEGER');
         }
         $pdo->prepare("INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")->execute([json_encode(SCHEMA_VERSION)]);
         $pdo->exec('COMMIT');

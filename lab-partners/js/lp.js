@@ -139,6 +139,7 @@ function OrderDetail({ id, reloadCounts }) {
           <div><span>Phone</span><b>${o.status === 'assigned' ? o.phone + ' (shown after you accept)' : html`<a href=${'tel:' + o.phone.replace(/\s/g, '')}>${o.phone}</a>`}</b></div>
           ${o.slotDate && html`<div><span>Collection</span><b>${fmtDay(o.slotDate)}, ${o.slotLabel}</b></div>`}
           <div><span>Address</span><b>${o.address ? html`${o.address}, ${o.city} ${o.pincode || ''} <a class="link" target="_blank" rel="noopener" href=${'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${o.address}, ${o.city} ${o.pincode || ''}`)}>Map</a>` : `${o.city}${o.pincode ? ' ' + o.pincode : ''}${o.status === 'assigned' ? ' (full address after you accept)' : ''}`}</b></div>
+          ${o.geo && html`<div><span>Exact location</span><b><a class="link" target="_blank" rel="noopener" href=${`https://www.google.com/maps/search/?api=1&query=${o.geo.lat},${o.geo.lng}`}>Open GPS pin in Maps</a>${o.geo.accuracy ? html` <span class="muted small">(±${o.geo.accuracy} m, shared by patient's phone)</span>` : ''}</b></div>`}
           ${o.note && html`<div><span>Patient note</span><b>${o.note}</b></div>`}
         </div>
         ${o.lines.length > 0 && html`<div class="lines">${o.lines.map((l) => html`<div class="sum-row"><span>${l.name}</span><span>₹${l.price}</span></div>`)}
@@ -156,16 +157,15 @@ function OrderDetail({ id, reloadCounts }) {
 }
 
 function Account({ user, onLogout }) {
-  const [f, setF] = useState({ current: '', next: '' }); const [busy, setBusy] = useState(false);
-  async function change() { setBusy(true); try { await api('/auth/change-password', { method: 'POST', body: f }); toast('Password changed.'); setF({ current: '', next: '' }); } catch (e) { toast(e.message, 'error'); } setBusy(false); }
   return html`<div class="stack narrow">
-    <div class="page-head"><div><h1>${user.name}</h1><p>${user.code} · ${user.city}, ${user.state}</p></div></div>
+    <div class="page-head"><div><h1>${user.name}</h1><p>${user.code} · ${[user.city, user.state].filter(Boolean).join(', ')}</p></div></div>
     <div class="card"><div class="card-head"><div><h3>Areas you serve</h3><p>Orders from these areas come to you.</p></div></div><div class="card-body"><div class="row-gap">
-      ${user.areas.map((a) => html`<${Badge} tone=${a.role === 'primary' ? 'green' : 'blue'}>${a.name} · ${a.role}</${Badge}>`)}</div></div></div>
-    <div class="card"><div class="card-head"><div><h3>Change password</h3></div></div><div class="card-body form-grid">
-      <${Field} label="Current password"><input type="password" value=${f.current} onInput=${(e) => setF({ ...f, current: e.target.value })} /></${Field}>
-      <${Field} label="New password" hint="At least 8 characters"><input type="password" value=${f.next} onInput=${(e) => setF({ ...f, next: e.target.value })} /></${Field}>
-      <div><${Button} loading=${busy} onClick=${change}>Update password</${Button}></div></div></div>
+      ${user.areas.length ? user.areas.map((a) => html`<${Badge} tone=${a.role === 'primary' ? 'green' : 'blue'}>${a.name} · ${a.role}</${Badge}>`) : html`<span class="muted">No areas assigned yet. Queue24 will assign them.</span>`}</div></div></div>
+    <div class="card"><div class="card-head"><div><h3>Your login</h3><p>Managed by Queue24.</p></div></div><div class="card-body kv-list">
+      <div><span>Lab code</span><b>${user.code}</b></div>
+      <div><span>Email</span><b>${user.email}</b></div>
+      <p class="muted small" style="margin:6px 0 0">To change your lab code, email or password, please contact Queue24.</p>
+    </div></div>
     <${Button} variant="ghost" icon="logout" onClick=${onLogout}>Sign out</${Button}>
   </div>`;
 }
@@ -182,8 +182,8 @@ function Login({ onLogin }) {
     <div class="login-panel"><form class="login-card" onSubmit=${submit}>
       <div class="eyebrow"><i class="dot"></i>QUEUE24 LAB PARTNERS</div>
       <h1>Sign in to your lab</h1>
-      <p class="muted">Use the login details shared by Queue24.</p>
-      <${Field} label="Email, mobile or lab code"><input value=${id} onInput=${(e) => setId(e.target.value)} autocomplete="username" autofocus /></${Field}>
+      <p class="muted">Use the lab code and password shared by Queue24.</p>
+      <${Field} label="Lab code or email"><input value=${id} onInput=${(e) => setId(e.target.value)} autocomplete="username" autofocus /></${Field}>
       <${Field} label="Password"><input type="password" value=${pw} onInput=${(e) => setPw(e.target.value)} autocomplete="current-password" /></${Field}>
       ${err && html`<div class="form-error"><${Icon} name="alert" size=${16} />${err}</div>`}
       <${Button} type="submit" size="lg" class="btn-block" loading=${busy}>Sign in</${Button}>

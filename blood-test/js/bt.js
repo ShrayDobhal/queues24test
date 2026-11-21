@@ -1,5 +1,5 @@
 // Queue24 Labs — patient app (/blood-test): book blood tests at home, upload prescription, track orders.
-import { html, render, useState, useEffect, useMemo, useRef, api, apiUpload, useRoute, navigate, match, toast, setUnauthorizedHandler, fmtDate, fmtDay, timeAgo, plural, compressImage } from './lib.js';
+import { html, render, useState, useEffect, useMemo, useRef, api, apiUpload, useRoute, navigate, match, toast, setUnauthorizedHandler, fmtDate, fmtDay, timeAgo, plural, compressImage, getLocation } from './lib.js';
 import { Icon, Button, Loading, ErrorBox, Badge, Empty, Modal, Field, Toasts, Spinner, confirmDialog } from './ui.js';
 import { ChatThread, FileChip } from './chat.js';
 import { CAT_ART } from './cat-icons.js';
@@ -19,6 +19,48 @@ const store = {
 };
 const rid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^A-Za-z0-9_-]/g, '');
 const off = (t) => (t.mrp > t.price ? Math.round((1 - t.price / t.mrp) * 100) : 0);
+
+// ------------------------------------------------------------------ location from the phone's GPS
+const norm = (x) => String(x || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z]/g, '');
+const CITY_ALIAS = { gurgaon: 'gurugram', bangalore: 'bengaluru', bombay: 'mumbai', calcutta: 'kolkata', madras: 'chennai', poona: 'pune', delhi: 'newdelhi' };
+/**
+ * GPS → { state, city, other, pincode, geo } matched to our service areas.
+ * City/state/pincode come from BigDataCloud's free browser reverse-geocoding (only the coordinates are sent).
+ * Returns { geo, error } when the place can't be matched, so the patient can still pick it by hand.
+ */
+async function detectLocation(areas) {
+  const g = await getLocation(15000); // friendly errors: permission denied / not available
+  const geo = { lat: g.lat, lng: g.lng, accuracy: g.accuracy, at: Date.now() };
+  let place = null;
+  try {
+    const r = await fetch(`https://api-bdc.io/data/reverse-geocode-client?latitude=${g.lat}&longitude=${g.lng}&localityLanguage=en`);
+    if (r.ok) place = await r.json();
+  } catch { /* offline or blocked: manual pick */ }
+  const pincode = place && /^[1-9]\d{5}$/.test(String(place.postcode || '')) ? String(place.postcode) : '';
+  if (!place) return { geo, error: 'Location found, but we could not read the city. Please pick it below.' };
+  if (place.countryCode && place.countryCode !== 'IN') return { geo: null, error: 'We collect samples in India only.' };
+  const sub = norm(place.principalSubdivision);
+  const st = areas.find((a) => norm(a.name) === sub) || areas.find((a) => sub && (sub.includes(norm(a.name)) || norm(a.name).includes(sub)));
+  if (!st) return { geo, pincode, error: 'Location found, but please pick your state below.' };
+  const names = [place.city, place.locality, ...((place.localityInfo && place.localityInfo.administrative) || []).map((x) => x.name)].filter(Boolean);
+  let hit = null;
+  for (const n of names) { const k = CITY_ALIAS[norm(n)] || norm(n); hit = st.cities.find((c) => norm(c.name) === k); if (hit) break; }
+  const name = place.city || place.locality || '';
+  const city = hit ? { city: hit.name, other: false }
+    : st.otherAreaId && name ? { city: name, other: true }
+    : st.cities.length ? { city: st.cities[0].name, other: false } : { city: name || st.name, other: true };
+  return { state: st.name, ...city, pincode, geo };
+}
+function GpsButton({ areas, onFound, label = 'Use my current location', small }) {
+  const [busy, setBusy] = useState(false);
+  async function go() {
+    setBusy(true);
+    try { onFound(await detectLocation(areas)); } catch (e) { toast(e.message, 'error'); }
+    setBusy(false);
+  }
+  return html`<button type="button" class=${'gps-btn' + (small ? ' small' : '')} onClick=${go} disabled=${busy}>
+    ${busy ? html`<${Spinner} size=${16} />` : html`<${Icon} name="pin" size=${16} />`}<span>${busy ? 'Finding your location…' : label}</span></button>`;
+}
 
 // ------------------------------------------------------------------ login (mobile + OTP) — promise based, opens when needed
 let openLogin = () => Promise.reject(new Error('not ready'));
@@ -69,18 +111,26 @@ function LocationModal({ areas, value, onSave, onClose }) {
   const [state, setState] = useState(value ? value.state : '');
   const [city, setCity] = useState(value ? value.city : '');
   const [other, setOther] = useState(value && value.other ? value.city : '');
+  const [gps, setGps] = useState(value ? { geo: value.geo || null, pincode: value.pincode || '' } : { geo: null, pincode: '' });
   const st = areas.find((a) => a.name === state);
+  function found(r) {
+    if (r.error) { toast(r.error, 'error'); if (r.state) setState(r.state); setGps({ geo: r.geo || null, pincode: r.pincode || '' }); return; }
+    toast(`Location set: ${r.city}, ${r.state}`);
+    onSave({ state: r.state, city: r.city, other: r.other, pincode: r.pincode, geo: r.geo });
+  }
   const cities = st ? st.cities : [];
   const isOther = city === '__other';
   function save() {
     if (!st) return toast('Select your state.', 'error');
     const c = isOther || !cities.length ? other.trim() : city;
     if (!c || c.length < 2) return toast('Enter your city.', 'error');
-    onSave({ state, city: c, other: isOther || !cities.length });
+    onSave({ state, city: c, other: isOther || !cities.length, pincode: gps.pincode, geo: gps.geo });
   }
   return html`<${Modal} open size="sm" title="Where should we collect the sample?" subtitle="We'll assign a partner lab near you." onClose=${onClose}
     footer=${html`<${Button} onClick=${save}>Save location</${Button}>`}>
     <div class="form-grid">
+      <${GpsButton} areas=${areas} onFound=${found} />
+      <div class="or-line"><span>or pick it yourself</span></div>
       <${Field} label="State / UT"><select value=${state} onChange=${(e) => { setState(e.target.value); setCity(''); }}>
         <option value="">Select state</option>${areas.map((a) => html`<option value=${a.name}>${a.name}</option>`)}</select></${Field}>
       ${st && cities.length > 0 && html`<${Field} label="City"><div class="chip-select">
@@ -195,6 +245,13 @@ function BookingFields({ cat, f, setF, user }) {
       </div>
     </div>
     <${Field} label="Collection address"><textarea rows="2" value=${f.address} onInput=${set('address')} placeholder="House / flat no., building, street, area"></textarea></${Field}>
+    <div class="geo-attach">${f.geo
+      ? html`<span class="geo-ok"><${Icon} name="pin" size=${15} />Exact location shared with the collection team${f.geo.accuracy ? ` (±${f.geo.accuracy} m)` : ''}</span><button type="button" class="link" onClick=${() => setF((x) => ({ ...x, geo: null }))}>Remove</button>`
+      : html`<${GpsButton} small areas=${cat.areas} label="Share my exact location (helps the collection team)" onFound=${(r) => {
+          if (!r.geo) { toast(r.error || 'Could not get your location.', 'error'); return; }
+          setF((x) => ({ ...x, geo: r.geo, pincode: x.pincode || r.pincode || '' }));
+          toast(r.pincode ? 'Location added. Pincode filled in.' : 'Location added.');
+        }} />`}</div>
     <div class="form-row">
       <${Field} label="Pincode"><input inputmode="numeric" maxlength="6" value=${f.pincode} onInput=${(e) => { const v = e.target.value.replace(/\D/g, ''); setF((x) => ({ ...x, pincode: v })); }} placeholder="6 digits" /></${Field}>
       <${Field} label="Phone for the collection team" optional><input type="tel" value=${f.contactPhone} onInput=${set('contactPhone')} placeholder=${user ? user.phone : 'Your mobile'} /></${Field}>
@@ -220,6 +277,7 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
   const ref = useRef(store.get('q24bt_ref', '') || rid());
   useEffect(() => { store.set('q24bt_ref', ref.current); }, []);
   useEffect(() => { if (user && !f.member.name) setF((x) => ({ ...x, member: { ...x.member, name: user.name } })); }, [user]);
+  useEffect(() => { if (loc && loc.geo && Date.now() - (loc.geo.at || 0) < 6 * 3600e3) setF((x) => ({ ...x, geo: x.geo || loc.geo, pincode: x.pincode || loc.pincode || '' })); }, [loc]);
   const total = items.reduce((a, t) => a + t.price, 0);
   const mrp = items.reduce((a, t) => a + t.mrp, 0);
   const fasting = Math.max(0, ...items.map((t) => t.fastingHours));
@@ -232,7 +290,7 @@ function Checkout({ cat, cart, toggle, clearCart, user, loc, onLoc, ensureUser }
     try {
       const body = { clientRef: ref.current, items: items.map((t) => t.id), state: loc.state, city: loc.city, ...f, member: { ...f.member, age: Number(f.member.age) || null } };
       const r = await api('/orders', { method: 'POST', body });
-      store.set('q24bt_booking', { ...f, slotDate: '', slotWindow: '' });
+      store.set('q24bt_booking', { ...f, geo: null, slotDate: '', slotWindow: '' });
       store.set('q24bt_ref', '');
       clearCart();
       toast(`Booked! Order ${r.order.orderNo}`);
@@ -287,6 +345,7 @@ function RxStart({ user, loc, onLoc, ensureUser }) {
     setBusy(true);
     const form = new FormData();
     form.append('clientRef', ref.current); form.append('state', loc.state); form.append('city', loc.city); form.append('note', note.trim());
+    if (loc.geo) { form.append('lat', loc.geo.lat); form.append('lng', loc.geo.lng); if (loc.geo.accuracy) form.append('accuracy', loc.geo.accuracy); }
     files.forEach(({ f }) => form.append('files[]', f, f.name || 'prescription.jpg'));
     try {
       const r = await apiUpload('/prescriptions', form);
@@ -388,7 +447,7 @@ function ConfirmQuote({ o, cat, user, onClose, onDone }) {
   const [busy, setBusy] = useState(false);
   async function submit() {
     setBusy(true);
-    try { const r = await api(`/orders/${o.id}/confirm`, { method: 'POST', body: { ...f, member: { ...f.member, age: Number(f.member.age) || null } } }); store.set('q24bt_booking', { ...f, slotDate: '', slotWindow: '' }); toast('Collection booked!'); onDone(r.order); }
+    try { const r = await api(`/orders/${o.id}/confirm`, { method: 'POST', body: { ...f, member: { ...f.member, age: Number(f.member.age) || null } } }); store.set('q24bt_booking', { ...f, geo: null, slotDate: '', slotWindow: '' }); toast('Collection booked!'); onDone(r.order); }
     catch (e) { toast(e.message, 'error'); }
     setBusy(false);
   }
