@@ -23,16 +23,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css?v=20261025_green_v10">
-  <!-- TEST SITE ONLY: Blood test button -->
+  <!-- TEST SITE ONLY: navigation changes -->
   <style>
-    .nav-bt-btn { display: inline-flex; align-items: center; gap: 6px; background: #1FA36E; color: #fff !important; padding: 7px 14px !important; border-radius: 999px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px -8px rgba(31, 163, 110, .8); transition: transform .15s, background .15s; }
-    .nav-bt-btn:hover { background: #178a5c; transform: translateY(-1px); }
-    .nav-bt-btn::after { display: none !important; }
+    .site-header .navbar { gap: 40px; }
+    .site-header .brand-logo { flex-shrink: 0; }
+    .site-header nav[aria-label="Primary Navigation"] { flex: 1; display: flex; justify-content: center; }
+    .nav-menu { gap: 32px; }
     .nav-menu .nav-link { white-space: nowrap; }
-    @media (max-width: 1320px) { .nav-menu { gap: 20px; } .nav-actions { gap: 12px; } }
-    /* the full nav + button no longer fits below 1100px: use the phone menu there */
-    @media (max-width: 1100px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
-    .mobile-drawer .nav-bt-mobile { display: flex; justify-content: center; margin: 8px 0; border-bottom: 0; }
+    .nav-actions { gap: 12px; flex-shrink: 0; }
+    .nav-bt-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 16px; font-size: 0.86rem; font-weight: 600; line-height: 1.2; white-space: nowrap;
+      color: #178a5c !important; background: #fff; border: 1.5px solid #1FA36E; border-radius: 999px; transition: background .15s, transform .15s; }
+    .nav-bt-btn:hover { background: #E8F6EF; transform: translateY(-1px); }
+    .nav-bt-btn::after { display: none !important; }
+    @media (max-width: 1280px) { .site-header .navbar { gap: 28px; } .nav-menu { gap: 22px; } }
+    /* links + buttons no longer fit side by side: use the phone menu */
+    @media (max-width: 1120px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
+    .mobile-drawer .nav-bt-mobile { display: flex; margin: 8px 0; padding: 11px 16px; font-size: 1rem; border-bottom: 1.5px solid #1FA36E; }
   </style>
 </head>
 <body>
@@ -63,16 +69,12 @@
           <li><a href="#pricing" class="nav-link trigger-pricing">Pricing</a></li>
           <li><a href="#customers" class="nav-link">Our customers</a></li>
           <li><a href="#resources" class="nav-link trigger-resources">Resources</a></li>
-          <li><a href="/blood-test/" class="nav-link nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a></li>
         </ul>
       </nav>
 
       <!-- Nav Actions -->
       <div class="nav-actions">
-        <button class="nav-download-btn smart-download-btn" id="nav-download-app-btn" aria-label="Download Queue24 App">
-          <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
-          <span>Get App</span>
-        </button>
+        <a href="/blood-test/" class="nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a>
         <button class="btn btn-primary nav-get-started trigger-get-started" id="nav-cta-btn">
           Get started free <span class="btn-arrow">→</span>
         </button>

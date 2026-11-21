@@ -7,7 +7,7 @@
  * Secrets (config.php files) are never copied — this folder is pushed to a PUBLIC GitHub repo.
  *
  * Test-only changes:
- *   1. "Blood test" button in the landing page navigation (desktop nav + mobile menu)
+ *   1. Landing page nav: "Get App" removed, "Blood test" button added (desktop + phone menu), spacing fixed
  *   2. /blood-test/index.html static page with DEMO mode (Vercel has no PHP; demo runs in the browser)
  */
 const fs = require('fs');
@@ -36,24 +36,35 @@ function copyDir(src, dest, rel = '') {
 }
 copyDir(SRC, DEST);
 
-// 3. landing page: add the "Blood test" button to the navigation (test site only)
+// 3. landing page navigation (test site only):
+//    - remove the desktop "Get App" button (phone menu keeps its Download App button)
+//    - add a "Blood test" button next to "Get started free" (desktop) and in the phone menu
+//    - even spacing between logo, links and buttons
 const idxPath = path.join(DEST, 'index.html');
 let idx = fs.readFileSync(idxPath, 'utf8');
-const desktopAnchor = '<li><a href="#resources" class="nav-link trigger-resources">Resources</a></li>';
+const getAppRe = /\n\s*<button class="nav-download-btn smart-download-btn" id="nav-download-app-btn"[\s\S]*?<\/button>/;
+const ctaAnchor = '<button class="btn btn-primary nav-get-started trigger-get-started" id="nav-cta-btn">';
 const mobileAnchor = '<a href="#resources" class="nav-link trigger-resources">Resources</a>\n    <div class="mobile-drawer-actions">';
-if (!idx.includes(desktopAnchor) || !idx.includes(mobileAnchor)) throw new Error('Navigation markup changed in main-site/index.html; update the anchors in tools/sync.js');
-idx = idx.replace(desktopAnchor, desktopAnchor + '\n          <li><a href="/blood-test/" class="nav-link nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a></li>');
+if (!getAppRe.test(idx) || !idx.includes(ctaAnchor) || !idx.includes(mobileAnchor)) throw new Error('Navigation markup changed in main-site/index.html; update the anchors in tools/sync.js');
+idx = idx.replace(getAppRe, '');
+idx = idx.replace(ctaAnchor, '<a href="/blood-test/" class="nav-bt-btn" id="nav-blood-test-btn"><span aria-hidden="true">🩸</span> Blood test</a>\n        ' + ctaAnchor);
 idx = idx.replace(mobileAnchor, '<a href="#resources" class="nav-link trigger-resources">Resources</a>\n    <a href="/blood-test/" class="nav-link nav-bt-btn nav-bt-mobile"><span aria-hidden="true">🩸</span> Blood test</a>\n    <div class="mobile-drawer-actions">');
-idx = idx.replace('</head>', `  <!-- TEST SITE ONLY: Blood test button -->
+idx = idx.replace('</head>', `  <!-- TEST SITE ONLY: navigation changes -->
   <style>
-    .nav-bt-btn { display: inline-flex; align-items: center; gap: 6px; background: #1FA36E; color: #fff !important; padding: 7px 14px !important; border-radius: 999px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px -8px rgba(31, 163, 110, .8); transition: transform .15s, background .15s; }
-    .nav-bt-btn:hover { background: #178a5c; transform: translateY(-1px); }
-    .nav-bt-btn::after { display: none !important; }
+    .site-header .navbar { gap: 40px; }
+    .site-header .brand-logo { flex-shrink: 0; }
+    .site-header nav[aria-label="Primary Navigation"] { flex: 1; display: flex; justify-content: center; }
+    .nav-menu { gap: 32px; }
     .nav-menu .nav-link { white-space: nowrap; }
-    @media (max-width: 1320px) { .nav-menu { gap: 20px; } .nav-actions { gap: 12px; } }
-    /* the full nav + button no longer fits below 1100px: use the phone menu there */
-    @media (max-width: 1100px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
-    .mobile-drawer .nav-bt-mobile { display: flex; justify-content: center; margin: 8px 0; border-bottom: 0; }
+    .nav-actions { gap: 12px; flex-shrink: 0; }
+    .nav-bt-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 16px; font-size: 0.86rem; font-weight: 600; line-height: 1.2; white-space: nowrap;
+      color: #178a5c !important; background: #fff; border: 1.5px solid #1FA36E; border-radius: 999px; transition: background .15s, transform .15s; }
+    .nav-bt-btn:hover { background: #E8F6EF; transform: translateY(-1px); }
+    .nav-bt-btn::after { display: none !important; }
+    @media (max-width: 1280px) { .site-header .navbar { gap: 28px; } .nav-menu { gap: 22px; } }
+    /* links + buttons no longer fit side by side: use the phone menu */
+    @media (max-width: 1120px) { nav[aria-label="Primary Navigation"], .nav-menu, .nav-actions { display: none !important; } .mobile-toggle { display: flex !important; margin-left: auto; } }
+    .mobile-drawer .nav-bt-mobile { display: flex; margin: 8px 0; padding: 11px 16px; font-size: 1rem; border-bottom: 1.5px solid #1FA36E; }
   </style>
 </head>`);
 fs.writeFileSync(idxPath, idx);
