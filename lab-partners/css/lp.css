@@ -1,4 +1,8 @@
 /* Queue24 Lab Partners portal (on top of the shared app.css) */
+/* Simple, clean headings: the same sans-serif font as the body text (no decorative serif) */
+:root { --serif: var(--font); }
+.page-head h1, .modal-head h2, .login-card h1, .login-art h2 { font-weight: 750; letter-spacing: -.5px; }
+.bt-hero h1 em, .login-art h2 em { font-style: normal; }
 .lp-shell { min-height: 100vh; }
 .lp-top { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 14px; padding: 10px 20px; background: rgba(246, 247, 244, .92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
 .lp-nav { display: flex; gap: 4px; margin: 0 auto; }

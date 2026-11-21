@@ -1,4 +1,8 @@
 /* Queue24 Labs — patient app (on top of the shared app.css) */
+/* Simple, clean headings: the same sans-serif font as the body text (no decorative serif) */
+:root { --serif: var(--font); }
+.page-head h1, .modal-head h2, .login-card h1, .login-art h2 { font-weight: 750; letter-spacing: -.5px; }
+.bt-hero h1 em, .login-art h2 em { font-style: normal; }
 .bt-shell { min-height: 100vh; padding-bottom: 90px; }
 .bt-top { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: rgba(246, 247, 244, .9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
 .bt-top .brand { flex: none; }
@@ -14,8 +18,8 @@
 
 .bt-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
 .bt-hero-text { padding: 26px; border-radius: 22px; background: radial-gradient(circle at 100% 0, rgba(43, 182, 124, .2), transparent 55%), var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.bt-hero h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; letter-spacing: -.7px; line-height: 1.08; margin: 10px 0 16px; }
-.bt-hero h1 em { color: var(--brand); font-style: italic; }
+.bt-hero h1 { font-family: var(--font); font-weight: 800; font-size: 32px; letter-spacing: -1px; line-height: 1.12; margin: 10px 0 16px; }
+.bt-hero h1 em { color: var(--brand); font-style: normal; }
 .trust { display: flex; flex-wrap: wrap; gap: 8px; }
 .trust span { display: inline-flex; align-items: center; gap: 6px; background: var(--brand-soft); color: var(--brand-ink); font-size: 12.5px; font-weight: 650; padding: 6px 10px; border-radius: 999px; }
 .rx-card { display: flex; align-items: center; gap: 14px; text-align: left; padding: 22px; border-radius: 22px; border: 0; background: linear-gradient(135deg, #1a8f5f, #0f6a45); color: #fff; box-shadow: 0 16px 40px -18px rgba(26, 143, 95, .8); transition: transform .12s; }
@@ -27,10 +31,11 @@
 .search.big input:not([type=checkbox]):not([type=file]):not([type=radio]) { min-height: 54px; border-radius: 16px; font-size: 16px; padding-left: 46px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .search.big .icon { left: 16px; }
 .cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-.cat { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; font-size: 12.5px; font-weight: 650; color: var(--ink-2); width: 76px; }
-.cat span { width: 54px; height: 54px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; color: var(--brand-ink); }
-.cat.active span { background: var(--brand); color: #fff; border-color: var(--brand); }
-.cat.active { color: var(--ink); }
+.cat { flex: none; display: flex; flex-direction: column; align-items: center; gap: 7px; border: 0; background: none; font-size: 12.5px; font-weight: 650; color: var(--ink-2); width: 78px; padding: 2px 0; }
+.cat span { width: 60px; height: 60px; border-radius: 20px; background: var(--surface); border: 2px solid transparent; display: grid; place-items: center; color: var(--brand-ink); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.cat:hover span { transform: translateY(-2px); box-shadow: 0 8px 18px -10px rgba(16, 33, 25, .35); }
+.cat.active span { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26, 143, 95, .15); }
+.cat.active { color: var(--brand-ink); font-weight: 750; }
 .loc-banner { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--line-2); background: var(--surface); color: var(--ink-2); font-size: 14px; }
 .loc-banner .link { margin-left: auto; }
 

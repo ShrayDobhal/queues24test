@@ -456,18 +456,30 @@
   window.__Q24_DEMO__ = true;
 
   // ------------------------------------------------------------------ demo bar (bottom-left; sheets and menus cover it)
+  // collapsed: a small round 🧪 button on the right edge (never covers buttons); tap it to open the controls
+  var barOpen = false;
   function bar() {
     S = load();
     var b = document.getElementById('q24-demo-bar') || document.createElement('div');
     b.id = 'q24-demo-bar'; b.setAttribute('role', 'note');
-    b.style.cssText = 'position:fixed;left:10px;bottom:calc(' + (SCOPE === 'partner' ? 76 : 84) + 'px + env(safe-area-inset-bottom));z-index:45;max-width:calc(100vw - 20px);background:rgba(16,33,25,.94);color:#e8efe9;font:600 11.5px/1.2 "Plus Jakarta Sans",Arial,sans-serif;padding:5px;border-radius:999px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);display:flex;align-items:center;gap:5px';
-    var btn = 'border:0;color:#fff;font:700 11.5px Arial,sans-serif;padding:5px 9px;border-radius:999px;cursor:pointer;white-space:nowrap;';
-    b.innerHTML = '<span style="padding-left:6px;white-space:nowrap" title="Demo preview: nothing is sent to a server. Orders, chats and files stay in this browser and are shared between /blood-test and /lab-partners.">🧪 Demo</span>'
-      + '<button data-a="auto" style="' + btn + 'background:' + (S.autoLab ? '#1FA36E' : '#4a5a52') + '" title="When on, a simulated lab accepts, quotes and sends a sample report by itself. Signing in to the lab portal turns it off.">Auto lab ' + (S.autoLab ? 'ON' : 'OFF') + '</button>'
-      + (SCOPE === 'patient' ? '<a href="/lab-partners/" style="' + btn + 'background:#2b3d34;text-decoration:none">Lab portal ↗</a>' : '<a href="/blood-test/" style="' + btn + 'background:#2b3d34;text-decoration:none">Patient site ↗</a>')
-      + '<button data-a="reset" style="' + btn + 'background:#7a2b2b">Reset</button>';
+    var base = 'position:fixed;right:10px;bottom:calc(' + (SCOPE === 'partner' ? 140 : 150) + 'px + env(safe-area-inset-bottom));z-index:45;background:rgba(16,33,25,.94);color:#e8efe9;font:600 12px/1.25 "Plus Jakarta Sans",Arial,sans-serif;box-shadow:0 10px 30px -10px rgba(0,0,0,.55);';
+    var btn = 'display:block;width:100%;text-align:left;border:0;color:#fff;font:700 12.5px Arial,sans-serif;padding:9px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;text-decoration:none;margin-top:6px;box-sizing:border-box;';
+    if (!barOpen) {
+      b.style.cssText = base + 'width:42px;height:42px;border-radius:999px;display:grid;place-items:center;padding:0;cursor:pointer;opacity:.92';
+      b.innerHTML = '<button data-a="open" aria-label="Demo controls" title="Demo controls" style="border:0;background:none;font-size:19px;line-height:1;cursor:pointer;width:42px;height:42px;padding:0">🧪</button>';
+    } else {
+      b.style.cssText = base + 'width:220px;max-width:calc(100vw - 20px);border-radius:16px;padding:10px;display:block';
+      b.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:13px">🧪 Demo preview</b><button data-a="close" aria-label="Close" style="border:0;background:#2b3d34;color:#fff;width:26px;height:26px;border-radius:999px;cursor:pointer;font-size:14px;line-height:1">×</button></div>'
+        + '<div style="margin-top:6px;color:#b9c9c0;font-weight:500;font-size:11.5px">Nothing is sent to a server. Orders, chats and files stay in this browser, shared by the patient site and the lab portal.</div>'
+        + '<button data-a="auto" style="' + btn + 'background:' + (S.autoLab ? '#1FA36E' : '#4a5a52') + '" title="A simulated lab accepts, quotes and sends a sample report by itself. Signing in to the lab portal turns it off.">Auto lab: ' + (S.autoLab ? 'ON' : 'OFF') + '</button>'
+        + (SCOPE === 'patient' ? '<a href="/lab-partners/" style="' + btn + 'background:#2b3d34">Open lab portal ↗</a>' : '<a href="/blood-test/" style="' + btn + 'background:#2b3d34">Open patient site ↗</a>')
+        + '<button data-a="reset" style="' + btn + 'background:#7a2b2b">Reset demo data</button>';
+    }
     b.onclick = function (e) {
-      var a = e.target.getAttribute('data-a');
+      var t = e.target.closest ? e.target.closest('[data-a]') : e.target;
+      var a = t && t.getAttribute('data-a');
+      if (a === 'open') { barOpen = true; bar(); }
+      if (a === 'close') { barOpen = false; bar(); }
       if (a === 'auto') { S = load(); S.autoLab = !S.autoLab; save(); bar(); }
       if (a === 'reset') {
         if (!confirm('Clear all demo orders, chats and sign-ins in this browser?')) return;

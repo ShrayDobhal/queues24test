@@ -2,6 +2,7 @@
 import { html, render, useState, useEffect, useMemo, useRef, api, apiUpload, useRoute, navigate, match, toast, setUnauthorizedHandler, fmtDate, fmtDay, timeAgo, plural, compressImage } from './lib.js';
 import { Icon, Button, Loading, ErrorBox, Badge, Empty, Modal, Field, Toasts, Spinner, confirmDialog } from './ui.js';
 import { ChatThread, FileChip } from './chat.js';
+import { CAT_ART } from './cat-icons.js';
 
 const CATS = [
   ['all', 'All', 'grid'], ['full-body', 'Full body', 'shield'], ['diabetes', 'Diabetes', 'droplet'], ['thyroid', 'Thyroid', 'target'],
@@ -155,7 +156,8 @@ function Home({ cat, tests, cart, toggle, loc, onLoc }) {
     </section>
 
     <div class="search big"><${Icon} name="search" size=${19} /><input placeholder="Search tests e.g. thyroid, CBC, vitamin D" value=${q} onInput=${(e) => setQ(e.target.value)} /></div>
-    <div class="cats">${CATS.map(([k, label, icon]) => html`<button class=${'cat' + (category === k ? ' active' : '')} onClick=${() => setCategory(k)}><span><${Icon} name=${icon} size=${18} /></span>${label}</button>`)}</div>
+    <div class="cats">${CATS.map(([k, label, icon]) => html`<button class=${'cat' + (category === k ? ' active' : '')} onClick=${() => setCategory(k)} aria-pressed=${category === k}>
+      <span style=${CAT_ART[k] ? `background:${CAT_ART[k].bg}` : ''}>${CAT_ART[k] ? CAT_ART[k].art : html`<${Icon} name=${icon} size=${18} />`}</span>${label}</button>`)}</div>
 
     ${!filtering && html`<button class="loc-banner" onClick=${onLoc}><${Icon} name="pin" size=${18} />${loc ? html`Sample collection in <b>${loc.city}, ${loc.state}</b>` : html`<b>Select your city</b> to see availability`}<span class="link">Change</span></button>`}
 
